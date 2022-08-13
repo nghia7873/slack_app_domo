@@ -22,7 +22,7 @@ services:
       image: certbot/certbot
       container_name: certbot
       volumes:
-          - ./certbot/conf:/etc/letsencrypt
+          - ./certbot/conf:/etc/nginx/ssl
           - ./certbot/www:/var/www/certbot
       command: certonly --webroot -w /var/www/certbot --force-renewal --email d3omo-test@gmail.com -d stage-domo-slack-conn.developmentlab.tokyo --agree-tos
 
