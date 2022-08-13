@@ -39,6 +39,8 @@ services:
       - ./docker/config/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/config/conf.d/:/etc/nginx/conf.d/
       - ./docker/logs:/var/log/nginx/
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
     depends_on:
       - app
 
