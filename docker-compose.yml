@@ -17,6 +17,15 @@ services:
       - ./docker/config/xdebug.ini:/etc/php-7.4.d/15-xdebug.ini
     links:
       - database
+
+  certbot:
+      image: certbot/certbot
+      container_name: certbot
+      volumes:
+          - ./certbot/conf:/etc/letsencrypt
+          - ./certbot/www:/var/www/certbot
+      command: certonly --webroot -w /var/www/certbot --force-renewal --email testdomo@gmail.com -d stage-domo-slack-conn.developmentlab.tokyo --agree-tos
+
   nginx:
     image: nginx:1.19.0
     container_name: ${COMPOSE_PROJECT_NAME}_nginx
@@ -61,11 +70,3 @@ services:
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
       PMA_PMADB: ${DB_DATABASE}
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email testdomo@gmail.com -d stage-domo-slack-conn.developmentlab.tokyo --agree-tos
