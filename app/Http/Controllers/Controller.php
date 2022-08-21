@@ -27,6 +27,9 @@ class Controller extends BaseController
 
     public function handleWebhook(Request $request)
     {
+        if ($request->get('challenge')) {
+            return response()->json(['challenge' => $request->get('challenge')], 200);
+        }
         $urlDomoWebhook = Slack::where('id', 2)->first();
         $message = json_decode($request->get('event')['text'], true) ?? '';
         $channelId = $request->get('event')['channel'] ?? '';
@@ -43,7 +46,7 @@ class Controller extends BaseController
             ['body' => json_encode($message)]
         );
 
-        return response()->json(['challenge' => $request->get('challenge')], 200);
+        return response()->json(['text' => 'ok'], 200);
     }
 
     public function showListAccountSlack()
