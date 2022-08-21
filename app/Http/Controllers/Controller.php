@@ -29,7 +29,7 @@ class Controller extends BaseController
     {
         $urlDomoWebhook = Slack::where('id', 2)->first();
         $message = json_decode($request->get('event')['text'], true) ?? '';
-        $channelId = $request->get('event')['channel'];
+        $channelId = $request->get('event')['channel'] ?? '';
 
         Slack::where('id', 2)->update([
            'channel_bot_id' => $channelId
