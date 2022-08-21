@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/slack_chat', [\App\Http\Controllers\Controller::class, 'slackChat']);
+Route::get('/', [\App\Http\Controllers\Controller::class, 'showListAccountSlack'])->name('list-slack');
+Route::get('/slack/{id}', [\App\Http\Controllers\Controller::class, 'editAccountSlack'])->name('edit-slack');
+Route::post('/slack', [\App\Http\Controllers\Controller::class, 'postAccountSlack'])->name('post-slack');
 
