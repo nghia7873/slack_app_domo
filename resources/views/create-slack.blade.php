@@ -17,26 +17,17 @@
 <body class="antialiased">
 <div class="container">
     <h2>Edit slack account</h2>
-    <form action="{{ route('post-edit-slack') }}" method="POST">
+    <form action="{{ route('post-create-slack') }}" method="POST">
         @csrf
         <div class="form-group">
             <label for="token">Bot Token Slack:</label>
-            <input type="text" class="form-control" id="token" name="token" value="{{ $slack->token }}">
+            <input type="text" class="form-control" id="token" name="token">
         </div>
         <div class="form-group">
             <label for="webhook_domo">Webhook domo json connector:</label>
-            <input type="text" class="form-control" id="webhook_domo" name="webhook_domo" value="{{ $slack->webhook_domo }}">
+            <input type="text" class="form-control" id="webhook_domo" name="webhook_domo">
         </div>
-        <div class="form-group">
-            <label for="slack">Webhook slack event subscription:</label>
-            <input type="text" class="form-control" id="slack" value="{{ $slack->webhook_slack }}" readonly>
-        </div>
-        <div class="form-group">
-            <label for="alert">Webhook domo alert:</label>
-            <input type="text" class="form-control" id="alert" value="{{ $slack->webhook_domo_alert }}" readonly>
-        </div>
-        <input type="hidden" class="form-control" id="id" name="id" value="{{ $slack->id }}">
-        <button type="submit" class="btn btn-default">Edit</button>
+        <button type="submit" class="btn btn-default">Create</button>
         <a href="{{ route('list-slack') }}">Back</a>
     </form>
 </div>

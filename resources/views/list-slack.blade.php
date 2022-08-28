@@ -9,6 +9,10 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
     <style>
         body {
             font-family: 'Nunito';
@@ -35,6 +39,7 @@
 <div class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center sm:pt-0">
     <div style="display: inline">
         <h2>List slack account</h2>
+        <a class="btn btn-default" href="{{ route('create-slack') }}">Create</a>
     </div>
 
     <table>
@@ -43,12 +48,10 @@
             <th>Action</th>
         </tr>
         @foreach($slacks as $slack)
-            @if($slack->id == 2)
             <tr>
                 <td>{{ $slack->user_id }}</td>
                 <td><a href="{{ route('edit-slack', $slack->id) }}">Detail</a></td>
             </tr>
-            @endif
         @endforeach
     </table>
 </div>
