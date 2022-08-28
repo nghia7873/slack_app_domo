@@ -49,7 +49,7 @@
         </tr>
         @foreach($slacks as $slack)
             <tr>
-                <td>{{ $slack->user_id }}</td>
+                <td>{{ $slack->id }}</td>
                 <td><a href="{{ route('edit-slack', $slack->id) }}">Detail</a></td>
             </tr>
         @endforeach
