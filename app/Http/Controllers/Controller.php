@@ -172,4 +172,11 @@ class Controller extends BaseController
             'message' => ''
         ];
     }
+
+    function test()
+    {
+        $client = new Client();
+        $res = $client->get('https://www.linkedin.com/uas/authenticate');
+        dd($res);
+    }
 }
