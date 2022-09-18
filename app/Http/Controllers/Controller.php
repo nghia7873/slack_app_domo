@@ -218,16 +218,16 @@ class Controller extends BaseController
 //
 //                return response()->json(['data' => $data], 200);
 //            }
-//            $this->test();
+            $this->test();
 
             $payload = [
                 'session_key' => $request->get('session_key'),
                 'session_password' => $request->get('session_password'),
-                'JSESSIONID' => 'ajax:2010457111579795176'
+                'JSESSIONID' => session('csrf_token')
             ];
 
             $headers = self::AUTH_HEADERS;
-            $headers['cookie'] = 'lang=v=2&lang=en-us; SameSite=None; Path=/; Domain=linkedin.com; Secure;JSESSIONID="ajax:2010457111579795176"; SameSite=None; Path=/; Domain=.www.linkedin.com; Secure;bcookie="v=2&46a2d054-7e30-4ac7-88e0-9c655a3d545d"; domain=.linkedin.com; Path=/; Secure; Expires=Mon, 18-Sep-2023 13:18:00 GMT; SameSite=None;bscookie="v=1&2022091813180079a07a81-6ce7-42c3-8818-946fd0a40a41AQHmdXMvbL_cXk1sO00MVLsmbP_DIZaN"; domain=.www.linkedin.com; Path=/; Secure; Expires=Mon, 18-Sep-2023 13:18:00 GMT; HttpOnly; SameSite=None;lidc="b=VGST07:s=V:r=V:a=V:p=V:g=2449:u=1:x=1:i=1663507080:t=1663593480:v=2:sig=AQGJ1LyaB7oXBDS8GZP_dx5oENFeYs0j"; Expires=Mon, 19 Sep 2022 13:18:00 GMT; domain=.linkedin.com; Path=/; SameSite=None; Secure';
+            $headers['cookie'] = session('create_cookie');
 
             $client = new Client([
                 'headers' => $headers
@@ -236,6 +236,7 @@ class Controller extends BaseController
             $res = $client->post('https://www.linkedin.com/uas/authenticate',
                 ['form_params' => $payload
                 ]);
+            dd(session('create_cookie'), session('csrf_token'));
 
             session(["cookies" => $res->getHeader('Set-Cookie')]);
 
@@ -259,7 +260,7 @@ class Controller extends BaseController
         try {
             $load = [
                 'cookie' => implode(";", session('cookies')),
-                'csrf-token' => 'ajax:2010457111579795176'
+                'csrf-token' => session('csrf_token')
             ];
 
             $this->client = new Client([
