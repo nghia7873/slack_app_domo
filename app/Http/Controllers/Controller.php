@@ -242,6 +242,14 @@ class Controller extends BaseController
 
             return response()->json(['data' => $data, 'status' => 200], 200);
         } catch (\Exception $e) {
+            $message = $e->getMessage();
+            preg_match('/{(?:[^{}]*|(?R))*}/', $message, $output_array);
+            $json = json_decode($output_array[0]);
+
+            if ($json->login_result == 'BAD_PASSWORD') {
+                return response()->json(['data' => null, 'status' => 401], 200);
+            }
+
             return response()->json(['data' => null, 'status' => 400], 200);
         }
     }
@@ -278,6 +286,7 @@ class Controller extends BaseController
                 $usersNetworkS));
 
             $details = [];
+
             foreach ($allUser as $user) {
                 foreach ($user['profile'] as $profiles) {
                     $details[] = $this->getProfileDetail($profiles, $user['network']);
@@ -364,11 +373,15 @@ class Controller extends BaseController
     {
         $experience = [];
         foreach ($data->positionView->elements as $element) {
-            if (empty($element->timePeriod->endDate)) {
-                $string = $element->timePeriod->startDate->year . "-" .$element->timePeriod->startDate->month;
-                $timePeriod = Carbon::parse($string)->format('F Y') . " - " . "Present";
+            if (isset($element->timePeriod)) {
+                if (empty($element->timePeriod->endDate)) {
+                    $string = $element->timePeriod->startDate->year . "-" .$element->timePeriod->startDate->month;
+                    $timePeriod = Carbon::parse($string)->format('F Y') . " - " . "Present";
+                } else {
+                    $timePeriod = $element->timePeriod->startDate->year . "-" .$element->timePeriod->endDate->year;
+                }
             } else {
-                $timePeriod = $element->timePeriod->startDate->year . "-" .$element->timePeriod->endDate->year;
+                $timePeriod = '';
             }
 
             $title = $element->title ?? '';

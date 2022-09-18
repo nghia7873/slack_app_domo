@@ -166,8 +166,10 @@
                     var csv = title.concat(data.data)
 
                     exportToCsv('list-linkedin.csv', csv)
-                } else {
+                } else if (data.status == 401){
                     alert('Your account or password is incorrect')
+                } else {
+                    alert('Error linkedin')
                 }
                 $('#preloader').hide()
             });
