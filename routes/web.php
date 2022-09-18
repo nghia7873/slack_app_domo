@@ -23,4 +23,6 @@ Route::get('/test', [\App\Http\Controllers\Controller::class, 'test1']);
 Route::post('/linked-cookie', [\App\Http\Controllers\Controller::class, 'test2']);
 Route::get('/me', [\App\Http\Controllers\Controller::class, 'me']);
 Route::get('/export', [\App\Http\Controllers\Controller::class, 'export']);
+Route::get('/clear-cache', [\App\Http\Controllers\Controller::class, 'clearCache']);
+
 

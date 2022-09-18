@@ -468,4 +468,12 @@ class Controller extends BaseController
     {
         return view('linked-cookie');
     }
+
+    function clearCache()
+    {
+        session()->forget('cookie');
+        session()->forget('csrf_token');
+        session()->forget('create_cookie');
+        session()->flush();
+    }
 }
