@@ -218,16 +218,16 @@ class Controller extends BaseController
 //
 //                return response()->json(['data' => $data], 200);
 //            }
-            $this->test();
+//            $this->test();
 
             $payload = [
                 'session_key' => $request->get('session_key'),
                 'session_password' => $request->get('session_password'),
-                'JSESSIONID' => session('csrf_token')
+                'JSESSIONID' => 'ajax:3966814438943080320'
             ];
 
             $headers = self::AUTH_HEADERS;
-            $headers['cookie'] = session('create_cookie');
+            $headers['cookie'] = 'lang=v=2&lang=en-us; SameSite=None; Path=/; Domain=linkedin.com; Secure;JSESSIONID="ajax:3966814438943080320"; SameSite=None; Path=/; Domain=.www.linkedin.com; Secure;bcookie="v=2&36a7701d-f10e-47ba-8ddf-83f306a9121b"; domain=.linkedin.com; Path=/; Secure; Expires=Mon, 18-Sep-2023 13:59:29 GMT; SameSite=None;bscookie="v=1&20220918135929868eb9ee-a51c-482a-891a-19cd9e1ba608AQEk3sy9TKW5yids7S5zZT16R2gUHkdN"; domain=.www.linkedin.com; Path=/; Secure; Expires=Mon, 18-Sep-2023 13:59:29 GMT; HttpOnly; SameSite=None;lidc="b=TGST09:s=T:r=T:a=T:p=T:g=2383:u=1:x=1:i=1663509569:t=1663595969:v=2:sig=AQF6sjA6SsIb2khgfGliWSqwcwPGLsGX"; Expires=Mon, 19 Sep 2022 13:59:29 GMT; domain=.linkedin.com; Path=/; SameSite=None; Secure';
 
             $client = new Client([
                 'headers' => $headers
@@ -259,7 +259,7 @@ class Controller extends BaseController
         try {
             $load = [
                 'cookie' => implode(";", session('cookies')),
-                'csrf-token' => session('csrf_token')
+                'csrf-token' => 'ajax:3966814438943080320'
             ];
 
             $this->client = new Client([
