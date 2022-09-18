@@ -197,7 +197,6 @@
     {
         getAuth()
     }
-    getAuth('nghia7873@gmail.com', '0985498127aA!')
 
 
     function exportToCsv(filename, rows) {
