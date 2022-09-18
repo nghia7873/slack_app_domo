@@ -236,7 +236,6 @@ class Controller extends BaseController
             $res = $client->post('https://www.linkedin.com/uas/authenticate',
                 ['form_params' => $payload
                 ]);
-            dd(session('create_cookie'), session('csrf_token'));
 
             session(["cookies" => $res->getHeader('Set-Cookie')]);
 
