@@ -244,13 +244,12 @@ class Controller extends BaseController
         } catch (\Exception $e) {
             $message = $e->getMessage();
             preg_match('/{(?:[^{}]*|(?R))*}/', $message, $output_array);
-            $json = json_decode($output_array[0]);
 
-            if ($json->login_result == 'BAD_PASSWORD') {
-                return response()->json(['data' => null, 'status' => 401], 200);
+            if (!isset($output_array[0])) {
+                return response()->json(['data' => null, 'status' => 400], 200);
             }
 
-            return response()->json(['data' => null, 'status' => 400], 200);
+            return response()->json(['data' => null, 'status' => 401], 200);
         }
     }
 
