@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Slack;
+use Carbon\Carbon;
+use Dflydev\DotAccessData\Data;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -15,6 +17,24 @@ use Vluzrmos\SlackApi\SlackApi;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    const AUTH_HEADERS = [
+        'X-Li-User-Agent' => 'LIAuthLibrary:3.2.4 com.linkedin.LinkedIn:8.8.1 iPhone:8.3',
+        'User-Agent' => 'LinkedIn/8.8.1 CFNetwork/711.3.18 Darwin/14.0.0',
+        'X-User-Language' => 'en',
+        'X-User-Locale' => 'en_US',
+        'Accept-Language' => 'en-us',
+        'Content-Type' => 'application/x-www-form-urlencoded'
+    ];
+
+    const REQUEST_AUTH_HEADERS = [
+        "user-agent" => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36",
+        "accept-language" => "en-AU,en-GB;q=0.9,en-US;q=0.8,en;q=0.7",
+        "x-li-lang" => "en_US",
+        "x-restli-protocol-version" => "2.0.0",
+    ];
+
+    protected $client;
 
     public function handleWebhookDomo($id, Request $request)
     {
@@ -177,6 +197,275 @@ class Controller extends BaseController
     {
         $client = new Client();
         $res = $client->get('https://www.linkedin.com/uas/authenticate');
-        dd($res);
+        $response = json_decode($res->getBody()->getContents());
+
+        if ($response->status !== 'success') {
+            return '';
+        }
+        $cookie = $res->getHeader('Set-Cookie')[1];
+        $split = explode(";", $cookie)[0];
+        $split1 = explode("=", $split)[1];
+        $cookie = str_replace('"', '', $split1);
+        session(['csrf_token' => $cookie]);
+        session(['create_cookie' => implode(";",$res->getHeader('Set-Cookie'))]);
+    }
+
+    function test2(Request $request)
+    {
+        try {
+//            if (session('cookies')) {
+//                $data = $this->me();
+//
+//                return response()->json(['data' => $data], 200);
+//            }
+            $this->test();
+
+            $payload = [
+                'session_key' => $request->get('session_key'),
+                'session_password' => $request->get('session_password'),
+                'JSESSIONID' => session('csrf_token')
+            ];
+            $headers = self::AUTH_HEADERS;
+            $headers['cookie'] = session('create_cookie');
+
+            $client = new Client([
+                'headers' => $headers
+            ]);
+
+            $res = $client->post('https://www.linkedin.com/uas/authenticate',
+                ['form_params' => $payload
+                ]);
+
+            session(["cookies" => $res->getHeader('Set-Cookie')]);
+
+            $data = $this->me();
+
+            return response()->json(['data' => $data, 'status' => 200], 200);
+        } catch (\Exception $e) {
+            return response()->json(['data' => null, 'status' => 400], 200);
+        }
+    }
+
+    function me()
+    {
+        try {
+            $load = [
+                'cookie' => implode(";", session('cookies')),
+                'csrf-token' => session('csrf_token')
+            ];
+
+            $this->client = new Client([
+                'headers' => $load
+            ]);
+
+            $res = $this->client->get('https://www.linkedin.com/voyager/api/me');
+
+            $me = json_decode($res->getBody()->getContents());
+
+            $publicIdMe = str_replace("urn:li:fs_miniProfile:", "", $me->miniProfile->entityUrn);
+            $usersNetworkF = $this->getProfileNetworkInfo($publicIdMe);
+            $usersNetworkS = [];
+
+            if (empty($usersNetworkF)) {
+                return [];
+            }
+
+            foreach ($usersNetworkF['profile'] as $userNetworkF) {
+                $usersNetworkS[] = $this->getProfileNetworkInfo($userNetworkF, 'S', true);
+            }
+
+            $allUser = array_filter(array_merge([$this->getProfileNetworkInfo($publicIdMe, 'F', true)],
+                $usersNetworkS));
+
+            $details = [];
+            foreach ($allUser as $user) {
+                foreach ($user['profile'] as $profiles) {
+                    $details[] = $this->getProfileDetail($profiles, $user['network']);
+                }
+            }
+
+            return $details;
+        } catch (\Exception $e) {
+            session()->forget('cookie');
+            session()->forget('csrf_token');
+            session()->forget('create_cookie');
+            session()->flush();
+        }
+
+    }
+
+    public function getProfileNetworkInfo($publicId, $network = 'F', $isProfile = false)
+    {
+        $count = 49;
+        $filters = "List(resultType->PEOPLE,connectionOf->$publicId,network->$network)";
+        $origin = "GLOBAL_SEARCH_HEADER";
+        $q = 'all';
+        $start = 0;
+        $queryContext = "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)";
+        $hehe = $this->client->get("https://www.linkedin.com/voyager/api/search/blended?count=$count&filters=$filters&origin=$origin&q=$q&start=$start&queryContext=$queryContext");
+        $data1 = json_decode($hehe->getBody()->getContents());
+
+        if (empty($data1->elements)) {
+            return [];
+        }
+
+        //get public id each network First
+        $listUsersFirst = [];
+        $listUsersFirst['network'] = "Default connection";
+
+        foreach ($data1->elements as $element) {
+            foreach ($element->elements as $user) {
+                if ($isProfile) {
+                    $listUsersFirst['profile'][] = $user->publicIdentifier;
+
+                    if ($network === 'S' && isset( $user->socialProofImagePile[0]->attributes[0])) {
+                        $listUsersFirst['network'] =
+                            $user->socialProofImagePile[0]->attributes[0]->miniProfile->firstName . " " .
+                            $user->socialProofImagePile[0]->attributes[0]->miniProfile->lastName;
+                    }
+                } else {
+                    $listUsersFirst['profile'][] = str_replace("urn:li:fs_miniProfile:", "", $user->targetUrn);
+                }
+            }
+        }
+
+        return $listUsersFirst;
+    }
+
+    public function getProfileDetail($publicId, $peopleShare = '')
+    {
+        $res = $this->client->get("https://www.linkedin.com/voyager/api/identity/profiles/$publicId/profileView");
+        $data1 = json_decode($res->getBody()->getContents());
+        $geoLocation = $data1->profile->geoLocationName ?? '';
+        $locationName = $data1->profile->locationName ?? '';
+        $summary =  $data1->profile->summary ?? '';
+        $occupation = $data1->profile->miniProfile->occupation ?? '';
+
+        if ($peopleShare !== 'Default connection') {
+            $peopleShare = $peopleShare . " is a shared connection";
+        }
+
+        return [
+            $data1->profile->firstName,
+            $data1->profile->lastName,
+            $geoLocation . " " . $locationName,
+            $summary,
+            $occupation,
+            implode("\n", $this->getExperience($data1)),
+            implode("\n", $this->getEducation($data1)),
+            implode("\n", $this->getLicensesAndCerifications($data1)),
+            implode("\n", $this->getLanguages($data1)),
+            implode("\n", $this->getSkills($data1)),
+            $peopleShare
+        ];
+    }
+
+    public function getExperience($data)
+    {
+        $experience = [];
+        foreach ($data->positionView->elements as $element) {
+            if (empty($element->timePeriod->endDate)) {
+                $string = $element->timePeriod->startDate->year . "-" .$element->timePeriod->startDate->month;
+                $timePeriod = Carbon::parse($string)->format('F Y') . " - " . "Present";
+            } else {
+                $timePeriod = $element->timePeriod->startDate->year . "-" .$element->timePeriod->endDate->year;
+            }
+
+            $title = $element->title ?? '';
+            $companyName = $element->companyName ?? '';
+            $geoLocationName = $element->geoLocationName ?? '';
+
+//            $experience[] = [
+//               'title' =>  $element->title,
+//                'companyName' => $element->companyName,
+//                'location' => $element->geoLocationName,
+//                'time_period' => $timePeriod
+//            ];
+
+            $experience[] = $title . " " . $companyName. " " . $geoLocationName . " " .
+                $timePeriod;
+        }
+
+        return $experience;
+    }
+
+    public function getEducation($data)
+    {
+        $education = [];
+        foreach ($data->educationView->elements as $element) {
+            if (isset($element->timePeriod->startDate)) {
+                $timePeriod = $element->timePeriod->startDate->year . "-" .$element->timePeriod->endDate->year;
+            }
+
+            $timePeriod = $timePeriod ?? '';
+            $schoolName = $element->school->schoolName ?? '';
+            $schoolName = $element->fieldOfStudy ?? '';
+            $description = $element->description ?? '';
+
+//            $education[] = [
+//                'school' =>  $element->school->schoolName,
+//                'field_of_study' => $element->fieldOfStudy,
+//                'time_period' => $timePeriod ?? ''
+//            ];
+
+            $education[] = $schoolName . " " . $schoolName. " " . $timePeriod . " ". $description;
+        }
+
+        return $education;
+    }
+
+    public function getLicensesAndCerifications($data)
+    {
+        $licenses = [];
+        foreach ($data->certificationView->elements as $element) {
+            if (isset($element->timePeriod->startDate)) {
+                $timePeriod = $element->timePeriod->startDate->year;
+            }
+
+            $timePeriod = $timePeriod ?? '';
+
+//            $licenses[] = [
+//                'name' =>  $element->name,
+//                'authority' => $element->authority,
+//                'time_period' => $timePeriod ?? ''
+//            ];
+
+            $licenses[] = $element->name . " " . $element->authority. " " . $timePeriod;
+        }
+
+        return $licenses;
+    }
+
+    public function getLanguages($data)
+    {
+        $languages = [];
+        foreach ($data->languageView->elements as $element) {
+//            $languages[] = [
+//                'name' => $element->name,
+//            ];
+
+            $languages[] = $element->name;
+        }
+
+        return $languages;
+    }
+
+    public function getSkills($data)
+    {
+        $skills = [];
+        foreach ($data->skillView->elements as $element) {
+//            $skills[] = [
+//                'name' => $element->name,
+//            ];
+
+            $skills[] = $element->name;
+        }
+
+        return $skills;
+    }
+
+    function test1()
+    {
+        return view('linked-cookie');
     }
 }

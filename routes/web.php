@@ -19,4 +19,8 @@ Route::get('/slack', [\App\Http\Controllers\Controller::class, 'createAccountSla
 Route::post('/slack/create', [\App\Http\Controllers\Controller::class, 'postCreateAccountSlack'])->name('post-create-slack');
 Route::post('/slack', [\App\Http\Controllers\Controller::class, 'postEditAccountSlack'])->name('post-edit-slack');
 Route::get('/linked-cookie', [\App\Http\Controllers\Controller::class, 'test']);
+Route::get('/test', [\App\Http\Controllers\Controller::class, 'test1']);
+Route::post('/linked-cookie', [\App\Http\Controllers\Controller::class, 'test2']);
+Route::get('/me', [\App\Http\Controllers\Controller::class, 'me']);
+Route::get('/export', [\App\Http\Controllers\Controller::class, 'export']);
 
