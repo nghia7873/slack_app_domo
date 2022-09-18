@@ -223,10 +223,11 @@ class Controller extends BaseController
             $payload = [
                 'session_key' => $request->get('session_key'),
                 'session_password' => $request->get('session_password'),
-                'JSESSIONID' => session('csrf_token')
+                'JSESSIONID' => "ajax:3173523979355937771"
             ];
+
             $headers = self::AUTH_HEADERS;
-            $headers['cookie'] = session('create_cookie');
+            $headers['cookie'] = '"lang=v=2&lang=en-us; SameSite=None; Path=/; Domain=linkedin.com; Secure;JSESSIONID="ajax:3173523979355937771"; SameSite=None; Path=/; Domain=.www.linkedin.com; Secure;bcookie="v=2&1bf62a33-1f75-4518-8914-02907f529e80"; domain=.linkedin.com; Path=/; Secure; Expires=Mon, 18-Sep-2023 13:14:15 GMT; SameSite=None;bscookie="v=1&2022091813141562ed35a4-8965-4724-8985-f80344a77767AQEFLU3gG-YoS1qjotAwK5gMN88iV7Yo"; domain=.www.linkedin.com; Path=/; Secure; Expires=Mon, 18-Sep-2023 13:14:15 GMT; HttpOnly; SameSite=None;lidc="b=OGST07:s=O:r=O:a=O:p=O:g=2388:u=1:x=1:i=1663506855:t=1663593255:v=2:sig=AQGOUJwXGLZ-M5WBPoh7zUMQFkFhE2qp"; Expires=Mon, 19 Sep 2022 13:14:15 GMT; domain=.linkedin.com; Path=/; SameSite=None; Secure"';
 
             $client = new Client([
                 'headers' => $headers
