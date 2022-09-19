@@ -272,11 +272,11 @@ class Controller extends BaseController
         } catch (\Exception $e) {
             $link = $this->verifyAccount(Cache::get('create_cookie'), Cache::get('csrf_token'), $request->get('session_key'),
                 $request->get('session_password'));
-            $this->cache('is_true', 'success');
             $message = $e->getMessage();
             preg_match('/{(?:[^{}]*|(?R))*}/', $message, $output_array);
 
             if (!isset($output_array[0])) {
+                $this->cache('is_true', 'success');
                 return response()->json(['data' => null, 'status' => 400, 'message' => $link], 200);
             }
 
