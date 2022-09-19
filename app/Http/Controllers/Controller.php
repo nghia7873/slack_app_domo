@@ -514,5 +514,6 @@ class Controller extends BaseController
         Cache::forget('cookie');
         Cache::forget('csrf_token');
         Cache::forget('create_cookie');
+        Cache::forget('is_true');
     }
 }
