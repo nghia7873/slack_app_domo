@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Slack;
 use Carbon\Carbon;
 use Dflydev\DotAccessData\Data;
+use Doctrine\DBAL\Exception;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -194,6 +195,24 @@ class Controller extends BaseController
         ];
     }
 
+    function verifyAccount($cookie, $ajax, $sessionKey, $sessionPassword)
+    {
+        $a = "curl --location --request POST 'https://www.linkedin.com/uas/authenticate' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--header 'X-Li-User-Agent: LIAuthLibrary:3.2.4 com.linkedin.LinkedIn:8.8.1 iPhone:8.3' \
+--header 'User-Agent: LinkedIn/8.8.1 CFNetwork/711.3.18 Darwin/14.0.0' \
+--header 'X-User-Language: en' \
+--header 'X-User-Locale: en_US' \
+--header 'Accept-Language: en-us' \
+--header 'Cookie: $cookie' \
+--data-urlencode 'session_key=$sessionKey' \
+--data-urlencode 'session_password=$sessionPassword' \
+--data-urlencode 'JSESSIONID=$ajax'
+";
+
+        return str_replace("\n", "", $a);
+    }
+
     function test()
     {
         $client = new Client();
@@ -220,12 +239,15 @@ class Controller extends BaseController
     function test2(Request $request)
     {
         try {
+            $this->cache('is_true', 'fail');
 //            if (session('cookies')) {
 //                $data = $this->me();
 //
 //                return response()->json(['data' => $data], 200);
 //            }
-            $this->test();
+            if (Cache::get('is_true') == 'fail') {
+                $this->test();
+            }
 
             $payload = [
                 'session_key' => $request->get('session_key'),
@@ -245,11 +267,13 @@ class Controller extends BaseController
                 ]);
 
             $this->cache('cookies', $res->getHeader('Set-Cookie'));
-
             $data = $this->me();
 
             return response()->json(['data' => $data, 'status' => 200], 200);
         } catch (\Exception $e) {
+            $link = $this->verifyAccount(Cache::get('create_cookie'), Cache::get('csrf_token'), $request->get('session_key'),
+                $request->get('session_password'));
+            $this->cache('is_true', 'success');
             $message = $e->getMessage();
             preg_match('/{(?:[^{}]*|(?R))*}/', $message, $output_array);
 
@@ -257,7 +281,7 @@ class Controller extends BaseController
                 return response()->json(['data' => null, 'status' => 400], 200);
             }
 
-            return response()->json(['data' => null, 'status' => 401], 200);
+            return response()->json(['data' => null, 'status' => 401, 'message' => $link], 200);
         }
     }
 
