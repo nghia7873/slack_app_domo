@@ -239,12 +239,10 @@ class Controller extends BaseController
     function test2(Request $request)
     {
         try {
-            $this->cache('is_true', 'fail');
-//            if (session('cookies')) {
-//                $data = $this->me();
-//
-//                return response()->json(['data' => $data], 200);
-//            }
+            if (empty(Cache::get('is_true')) || Cache::get('is_true') !== 'success') {
+                $this->cache('is_true', 'fail');
+            }
+
             if (Cache::get('is_true') == 'fail') {
                 $this->test();
             }
@@ -268,6 +266,7 @@ class Controller extends BaseController
 
             $this->cache('cookies', $res->getHeader('Set-Cookie'));
             $data = $this->me();
+            $this->cache('is_true', 'fail');
 
             return response()->json(['data' => $data, 'status' => 200], 200);
         } catch (\Exception $e) {
