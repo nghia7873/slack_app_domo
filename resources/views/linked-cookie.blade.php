@@ -101,8 +101,12 @@
             <div id="loader"></div>
         </div>
         <button type="submit" class="btn btn-default">Download csv</button>
+        <div class="form-group" id="text_area">
+            <label>Copy to verify account</label>
+            <textarea class="form-control"  id="link"></textarea>
+            <a class="btn btn-default" onclick="copy()">Copy text</a>
+        </div>
 
-        <textarea id="link"></textarea>
     </form>
 </div>
 
@@ -111,6 +115,7 @@
 
 
 <script>
+    $('#text_area').hide()
     $('#linked-form').submit(function (e) {
         e.preventDefault();
         let email = $('#email').val();
@@ -172,6 +177,7 @@
                     alert('Your account or password is incorrect')
                 } else {
                     alert('Error linkedin')
+                    $('#text_area').show()
                     $('#link').val(data.message)
                 }
                 $('#preloader').hide()
@@ -184,16 +190,20 @@
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
-    // function getMe() {
-    //     sendRequest("/me", "GET")
-    //         .then((r) => {
-    //             return r.json();
-    //         })
-    //         .then((data) => {
-    //             console.log(data.data)
-    //             // exportToCsv('list-linkedin.csv', data.data)
-    //         });
-    // }
+    function copy() {
+        // Get the text field
+        var copyText = document.getElementById("link");
+
+        // Select the text field
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // For mobile devices
+
+        // Copy the text inside the text field
+        navigator.clipboard.writeText(copyText.value);
+
+        // Alert the copied text
+        alert("Copied the text: " + copyText.value);
+    }
 
 
     function start()
