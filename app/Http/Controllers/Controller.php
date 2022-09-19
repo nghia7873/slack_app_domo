@@ -10,6 +10,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Cache;
 use Vluzrmos\SlackApi\Facades\SlackChat;
 use GuzzleHttp\Client;
 use Vluzrmos\SlackApi\SlackApi;
@@ -206,8 +207,14 @@ class Controller extends BaseController
         $split = explode(";", $cookie)[0];
         $split1 = explode("=", $split)[1];
         $cookie = str_replace('"', '', $split1);
-        session(['csrf_token' => $cookie]);
-        session(['create_cookie' => implode(";",$res->getHeader('Set-Cookie'))]);
+        $this->cache('csrf_token', $cookie);
+        $this->cache('create_cookie', implode(";",$res->getHeader('Set-Cookie')));
+    }
+
+    function cache($key, $value)
+    {
+        $expiresAt = Carbon::now()->addMonths(2);
+        Cache::put($key, $value, $expiresAt);
     }
 
     function test2(Request $request)
@@ -223,11 +230,11 @@ class Controller extends BaseController
             $payload = [
                 'session_key' => $request->get('session_key'),
                 'session_password' => $request->get('session_password'),
-                'JSESSIONID' => session('csrf_token')
+                'JSESSIONID' => Cache::get('csrf_token')
             ];
 
             $headers = self::AUTH_HEADERS;
-            $headers['cookie'] = session('create_cookie');
+            $headers['cookie'] = Cache::get('create_cookie');
 
             $client = new Client([
                 'headers' => $headers
@@ -237,7 +244,7 @@ class Controller extends BaseController
                 ['form_params' => $payload
                 ]);
 
-            session(["cookies" => $res->getHeader('Set-Cookie')]);
+            $this->cache('cookies', $res->getHeader('Set-Cookie'));
 
             $data = $this->me();
 
@@ -258,8 +265,8 @@ class Controller extends BaseController
     {
         try {
             $load = [
-                'cookie' => implode(";", session('cookies')),
-                'csrf-token' => session('csrf_token')
+                'cookie' => implode(";", Cache::get('cookies')),
+                'csrf-token' => Cache::get('csrf_token')
             ];
 
             $this->client = new Client([
@@ -295,10 +302,7 @@ class Controller extends BaseController
 
             return $details;
         } catch (\Exception $e) {
-            session()->forget('cookie');
-            session()->forget('csrf_token');
-            session()->forget('create_cookie');
-            session()->flush();
+            $this->clearCache();
         }
 
     }
@@ -484,9 +488,8 @@ class Controller extends BaseController
 
     function clearCache()
     {
-        session()->forget('cookie');
-        session()->forget('csrf_token');
-        session()->forget('create_cookie');
-        session()->flush();
+        Cache::forget('cookie');
+        Cache::forget('csrf_token');
+        Cache::forget('create_cookie');
     }
 }
