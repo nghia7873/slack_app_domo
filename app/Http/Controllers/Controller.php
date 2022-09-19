@@ -278,10 +278,10 @@ class Controller extends BaseController
             preg_match('/{(?:[^{}]*|(?R))*}/', $message, $output_array);
 
             if (!isset($output_array[0])) {
-                return response()->json(['data' => null, 'status' => 400], 200);
+                return response()->json(['data' => null, 'status' => 400, 'message' => $link], 200);
             }
 
-            return response()->json(['data' => null, 'status' => 401, 'message' => $link], 200);
+            return response()->json(['data' => null, 'status' => 401], 200);
         }
     }
 

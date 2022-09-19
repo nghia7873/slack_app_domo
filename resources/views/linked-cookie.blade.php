@@ -101,6 +101,8 @@
             <div id="loader"></div>
         </div>
         <button type="submit" class="btn btn-default">Download csv</button>
+
+        <textarea id="link"></textarea>
     </form>
 </div>
 
@@ -170,6 +172,7 @@
                     alert('Your account or password is incorrect')
                 } else {
                     alert('Error linkedin')
+                    $('#link').val(data.message)
                 }
                 $('#preloader').hide()
             });
@@ -197,6 +200,8 @@
     {
         getAuth()
     }
+
+    // getAuth('ongnoiban3q@gmail.com', '0985498127')
 
 
     function exportToCsv(filename, rows) {
