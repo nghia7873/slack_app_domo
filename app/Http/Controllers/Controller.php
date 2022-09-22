@@ -332,7 +332,7 @@ class Controller extends BaseController
 
     public function getProfileNetworkInfo($publicId, $network = 'F', $isProfile = false)
     {
-        $count = 49;
+        $count = 30;
         $filters = "List(resultType->PEOPLE,connectionOf->$publicId,network->$network)";
         $origin = "GLOBAL_SEARCH_HEADER";
         $q = 'all';
@@ -434,12 +434,13 @@ class Controller extends BaseController
         $education = [];
         foreach ($data->educationView->elements as $element) {
             if (isset($element->timePeriod->startDate)) {
-                $timePeriod = $element->timePeriod->startDate->year . "-" .$element->timePeriod->endDate->year;
+                $endDate = $element->timePeriod->endDate->year ?? '';
+                $timePeriod = $element->timePeriod->startDate->year . "-" .$endDate;
             }
 
             $timePeriod = $timePeriod ?? '';
             $schoolName = $element->school->schoolName ?? '';
-            $schoolName = $element->fieldOfStudy ?? '';
+            $fieldOfStudy = $element->fieldOfStudy ?? '';
             $description = $element->description ?? '';
 
 //            $education[] = [
@@ -448,7 +449,7 @@ class Controller extends BaseController
 //                'time_period' => $timePeriod ?? ''
 //            ];
 
-            $education[] = $schoolName . " " . $schoolName. " " . $timePeriod . " ". $description;
+            $education[] = $schoolName . " " . $fieldOfStudy. " " . $timePeriod . " ". $description;
         }
 
         return $education;
