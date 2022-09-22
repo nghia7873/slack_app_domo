@@ -405,8 +405,13 @@ class Controller extends BaseController
             $endDate = $element->timePeriod->endDate->year ?? '';
             if (isset($element->timePeriod)) {
                 if (empty($element->timePeriod->endDate)) {
-                    $string = $startDate . "-" .$month;
-                    $timePeriod = Carbon::parse($string)->format('F Y') . " - " . "Present";
+                    if (!empty($month)) {
+                        $string = $startDate . "-" .$month;
+                        $timePeriod = Carbon::parse($string)->format('F Y') . " - " . "Present";
+                    } else {
+                        $timePeriod = $startDate . " - " . "Present";
+                    }
+
                 } else {
                     $timePeriod = $startDate . "-" . $endDate;
                 }
