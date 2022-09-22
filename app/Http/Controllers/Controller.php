@@ -400,12 +400,15 @@ class Controller extends BaseController
     {
         $experience = [];
         foreach ($data->positionView->elements as $element) {
+            $month = $element->timePeriod->startDate->month ?? '';
+            $startDate = $element->timePeriod->startDate->year ?? '';
+            $endDate = $element->timePeriod->endDate->year ?? '';
             if (isset($element->timePeriod)) {
                 if (empty($element->timePeriod->endDate)) {
-                    $string = $element->timePeriod->startDate->year . "-" .$element->timePeriod->startDate->month;
+                    $string = $startDate . "-" .$month;
                     $timePeriod = Carbon::parse($string)->format('F Y') . " - " . "Present";
                 } else {
-                    $timePeriod = $element->timePeriod->startDate->year . "-" .$element->timePeriod->endDate->year;
+                    $timePeriod = $startDate . "-" . $endDate;
                 }
             } else {
                 $timePeriod = '';
@@ -435,7 +438,8 @@ class Controller extends BaseController
         foreach ($data->educationView->elements as $element) {
             if (isset($element->timePeriod->startDate)) {
                 $endDate = $element->timePeriod->endDate->year ?? '';
-                $timePeriod = $element->timePeriod->startDate->year . "-" .$endDate;
+                $startDate = $element->timePeriod->startDate->year;
+                $timePeriod = $startDate . "-" .$endDate;
             }
 
             $timePeriod = $timePeriod ?? '';
@@ -460,7 +464,8 @@ class Controller extends BaseController
         $licenses = [];
         foreach ($data->certificationView->elements as $element) {
             if (isset($element->timePeriod->startDate)) {
-                $timePeriod = $element->timePeriod->startDate->year;
+                $year = $element->timePeriod->startDate->year ?? '';
+                $timePeriod = $year;
             }
 
             $timePeriod = $timePeriod ?? '';
