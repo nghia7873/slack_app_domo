@@ -332,7 +332,7 @@ class Controller extends BaseController
 
     public function getProfileNetworkInfo($publicId, $network = 'F', $isProfile = false)
     {
-        $count = 30;
+        $count = 49;
         $filters = "List(resultType->PEOPLE,connectionOf->$publicId,network->$network)";
         $origin = "GLOBAL_SEARCH_HEADER";
         $q = 'all';
