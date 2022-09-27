@@ -325,14 +325,14 @@ class Controller extends BaseController
 
             return $details;
         } catch (\Exception $e) {
+            logger($e);
             $this->clearCache();
         }
-
     }
 
     public function getProfileNetworkInfo($publicId, $network = 'F', $isProfile = false)
     {
-        $count = 49;
+        $count = 30;
         $filters = "List(resultType->PEOPLE,connectionOf->$publicId,network->$network)";
         $origin = "GLOBAL_SEARCH_HEADER";
         $q = 'all';
@@ -381,9 +381,12 @@ class Controller extends BaseController
             $peopleShare = $peopleShare . " is a shared connection";
         }
 
+        $firstName =  $data1->profile->firstName ?? '';
+        $lastName =  $data1->profile->lastName ?? '';
+
         return [
-            $data1->profile->firstName,
-            $data1->profile->lastName,
+            $firstName,
+            $lastName,
             $geoLocation . " " . $locationName,
             $summary,
             $occupation,
@@ -407,7 +410,7 @@ class Controller extends BaseController
                 if (empty($element->timePeriod->endDate)) {
                     if (!empty($month)) {
                         $string = $startDate . "-" .$month;
-                        $timePeriod = Carbon::parse($string)->format('F Y') . " - " . "Present";
+                        $timePeriod = $string . " - " . "Present";
                     } else {
                         $timePeriod = $startDate . " - " . "Present";
                     }
@@ -423,13 +426,6 @@ class Controller extends BaseController
             $companyName = $element->companyName ?? '';
             $geoLocationName = $element->geoLocationName ?? '';
 
-//            $experience[] = [
-//               'title' =>  $element->title,
-//                'companyName' => $element->companyName,
-//                'location' => $element->geoLocationName,
-//                'time_period' => $timePeriod
-//            ];
-
             $experience[] = $title . " " . $companyName. " " . $geoLocationName . " " .
                 $timePeriod;
         }
@@ -443,7 +439,7 @@ class Controller extends BaseController
         foreach ($data->educationView->elements as $element) {
             if (isset($element->timePeriod->startDate)) {
                 $endDate = $element->timePeriod->endDate->year ?? '';
-                $startDate = $element->timePeriod->startDate->year;
+                $startDate = $element->timePeriod->startDate->year ?? '';
                 $timePeriod = $startDate . "-" .$endDate;
             }
 
@@ -451,12 +447,6 @@ class Controller extends BaseController
             $schoolName = $element->school->schoolName ?? '';
             $fieldOfStudy = $element->fieldOfStudy ?? '';
             $description = $element->description ?? '';
-
-//            $education[] = [
-//                'school' =>  $element->school->schoolName,
-//                'field_of_study' => $element->fieldOfStudy,
-//                'time_period' => $timePeriod ?? ''
-//            ];
 
             $education[] = $schoolName . " " . $fieldOfStudy. " " . $timePeriod . " ". $description;
         }
@@ -475,12 +465,6 @@ class Controller extends BaseController
 
             $timePeriod = $timePeriod ?? '';
 
-//            $licenses[] = [
-//                'name' =>  $element->name,
-//                'authority' => $element->authority,
-//                'time_period' => $timePeriod ?? ''
-//            ];
-
             $licenses[] = $element->name . " " . $element->authority. " " . $timePeriod;
         }
 
@@ -491,11 +475,7 @@ class Controller extends BaseController
     {
         $languages = [];
         foreach ($data->languageView->elements as $element) {
-//            $languages[] = [
-//                'name' => $element->name,
-//            ];
-
-            $languages[] = $element->name;
+            $languages[] = $element->name ?? '';
         }
 
         return $languages;
@@ -505,11 +485,7 @@ class Controller extends BaseController
     {
         $skills = [];
         foreach ($data->skillView->elements as $element) {
-//            $skills[] = [
-//                'name' => $element->name,
-//            ];
-
-            $skills[] = $element->name;
+            $skills[] = $element->name ?? '';
         }
 
         return $skills;
