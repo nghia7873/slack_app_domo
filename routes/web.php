@@ -18,9 +18,9 @@ Route::get('/slack/{id}', [\App\Http\Controllers\Controller::class, 'editAccount
 Route::get('/slack', [\App\Http\Controllers\Controller::class, 'createAccountSlack'])->name('create-slack');
 Route::post('/slack/create', [\App\Http\Controllers\Controller::class, 'postCreateAccountSlack'])->name('post-create-slack');
 Route::post('/slack', [\App\Http\Controllers\Controller::class, 'postEditAccountSlack'])->name('post-edit-slack');
-Route::get('/linked-cookie', [\App\Http\Controllers\Controller::class, 'test']);
-Route::get('/test', [\App\Http\Controllers\Controller::class, 'test1']);
-Route::post('/linked-cookie', [\App\Http\Controllers\Controller::class, 'test2']);
+Route::get('/linked-cookie', [\App\Http\Controllers\Controller::class, 'authenLinkedin']);
+Route::get('/test', [\App\Http\Controllers\Controller::class, 'linkedCookie']);
+Route::post('/linked-cookie', [\App\Http\Controllers\Controller::class, 'handleLinkedin']);
 Route::get('/me', [\App\Http\Controllers\Controller::class, 'me']);
 Route::get('/export', [\App\Http\Controllers\Controller::class, 'export']);
 Route::get('/clear-cache', [\App\Http\Controllers\Controller::class, 'clearCache']);

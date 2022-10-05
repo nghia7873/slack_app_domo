@@ -198,22 +198,22 @@ class Controller extends BaseController
     function verifyAccount($cookie, $ajax, $sessionKey, $sessionPassword)
     {
         $a = "curl --location --request POST 'https://www.linkedin.com/uas/authenticate' \
---header 'Content-Type: application/x-www-form-urlencoded' \
---header 'X-Li-User-Agent: LIAuthLibrary:3.2.4 com.linkedin.LinkedIn:8.8.1 iPhone:8.3' \
---header 'User-Agent: LinkedIn/8.8.1 CFNetwork/711.3.18 Darwin/14.0.0' \
---header 'X-User-Language: en' \
---header 'X-User-Locale: en_US' \
---header 'Accept-Language: en-us' \
---header 'Cookie: $cookie' \
---data-urlencode 'session_key=$sessionKey' \
---data-urlencode 'session_password=$sessionPassword' \
---data-urlencode 'JSESSIONID=$ajax'
-";
+            --header 'Content-Type: application/x-www-form-urlencoded' \
+            --header 'X-Li-User-Agent: LIAuthLibrary:3.2.4 com.linkedin.LinkedIn:8.8.1 iPhone:8.3' \
+            --header 'User-Agent: LinkedIn/8.8.1 CFNetwork/711.3.18 Darwin/14.0.0' \
+            --header 'X-User-Language: en' \
+            --header 'X-User-Locale: en_US' \
+            --header 'Accept-Language: en-us' \
+            --header 'Cookie: $cookie' \
+            --data-urlencode 'session_key=$sessionKey' \
+            --data-urlencode 'session_password=$sessionPassword' \
+            --data-urlencode 'JSESSIONID=$ajax'
+            ";
 
         return str_replace("\n", "", $a);
     }
 
-    function test()
+    function authenLinkedin()
     {
         $client = new Client();
         $res = $client->get('https://www.linkedin.com/uas/authenticate');
@@ -236,7 +236,7 @@ class Controller extends BaseController
         Cache::put($key, $value, $expiresAt);
     }
 
-    function test2(Request $request)
+    function handleLinkedin(Request $request)
     {
         try {
             if (empty(Cache::get('is_true')) || Cache::get('is_true') !== 'success') {
@@ -244,7 +244,7 @@ class Controller extends BaseController
             }
 
             if (Cache::get('is_true') == 'fail') {
-                $this->test();
+                $this->authenLinkedin();
             }
 
             $payload = [
@@ -463,9 +463,11 @@ class Controller extends BaseController
                 $timePeriod = $year;
             }
 
+            $name = $element->name ?? '';
+            $authority = $element->authority ?? '';
             $timePeriod = $timePeriod ?? '';
 
-            $licenses[] = $element->name . " " . $element->authority. " " . $timePeriod;
+            $licenses[] = $name . " " .$authority . " " . $timePeriod;
         }
 
         return $licenses;
@@ -491,7 +493,7 @@ class Controller extends BaseController
         return $skills;
     }
 
-    function test1()
+    function linkedCookie()
     {
         return view('linked-cookie');
     }
