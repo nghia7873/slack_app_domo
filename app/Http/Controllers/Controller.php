@@ -239,13 +239,7 @@ class Controller extends BaseController
     function handleLinkedin(Request $request)
     {
         try {
-            if (empty(Cache::get('is_true')) || Cache::get('is_true') !== 'success') {
-                $this->cache('is_true', 'fail');
-            }
-
-            if (Cache::get('is_true') == 'fail') {
-                $this->authenLinkedin();
-            }
+            $this->authenLinkedin();
 
             $payload = [
                 'session_key' => $request->get('session_key'),
