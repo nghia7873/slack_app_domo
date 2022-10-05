@@ -198,17 +198,17 @@ class Controller extends BaseController
     function verifyAccount($cookie, $ajax, $sessionKey, $sessionPassword)
     {
         $a = "curl --location --request POST 'https://www.linkedin.com/uas/authenticate' \
-            --header 'Content-Type: application/x-www-form-urlencoded' \
-            --header 'X-Li-User-Agent: LIAuthLibrary:3.2.4 com.linkedin.LinkedIn:8.8.1 iPhone:8.3' \
-            --header 'User-Agent: LinkedIn/8.8.1 CFNetwork/711.3.18 Darwin/14.0.0' \
-            --header 'X-User-Language: en' \
-            --header 'X-User-Locale: en_US' \
-            --header 'Accept-Language: en-us' \
-            --header 'Cookie: $cookie' \
-            --data-urlencode 'session_key=$sessionKey' \
-            --data-urlencode 'session_password=$sessionPassword' \
-            --data-urlencode 'JSESSIONID=$ajax'
-            ";
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--header 'X-Li-User-Agent: LIAuthLibrary:3.2.4 com.linkedin.LinkedIn:8.8.1 iPhone:8.3' \
+--header 'User-Agent: LinkedIn/8.8.1 CFNetwork/711.3.18 Darwin/14.0.0' \
+--header 'X-User-Language: en' \
+--header 'X-User-Locale: en_US' \
+--header 'Accept-Language: en-us' \
+--header 'Cookie: $cookie' \
+--data-urlencode 'session_key=$sessionKey' \
+--data-urlencode 'session_password=$sessionPassword' \
+--data-urlencode 'JSESSIONID=$ajax'
+";
 
         return str_replace("\n", "", $a);
     }
