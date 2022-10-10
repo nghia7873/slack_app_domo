@@ -330,16 +330,16 @@ class Controller extends BaseController
 
     public function getProfileNetworkInfo($publicId, $network = 'F', $isProfile = false)
     {
-        $count = 10;
+        $count = 49;
         $filters = "List(resultType->PEOPLE,connectionOf->$publicId,network->$network)";
         $origin = "GLOBAL_SEARCH_HEADER";
         $q = 'all';
         $start = 0;
         $listUsersFirst = [];
-        $maxResult = 17;
+        $maxResult = 300;
 
         while (true) {
-            if (count($listUsersFirst) > $maxResult) {
+            if (isset($listUsersFirst['profile']) && count($listUsersFirst['profile']) > $maxResult) {
                 break;
             }
 
