@@ -295,19 +295,23 @@ class Controller extends BaseController
             $me = json_decode($res->getBody()->getContents());
 
             $publicIdMe = str_replace("urn:li:fs_miniProfile:", "", $me->miniProfile->entityUrn);
-            $usersNetworkF = $this->getProfileNetworkInfo($publicIdMe);
+//            $usersNetworkF = $this->getProfileNetworkInfo($publicIdMe);
             $usersNetworkS = [];
+//
+//            if (empty($usersNetworkF)) {
+//                return [];
+//            }
 
-            if (empty($usersNetworkF)) {
-                return [];
-            }
-
-            foreach ($usersNetworkF['profile'] as $userNetworkF) {
-                $usersNetworkS[] = $this->getProfileNetworkInfo($userNetworkF, 'S', true);
-            }
+//            foreach ($usersNetworkF['profile'] as $userNetworkF) {
+//                $usersNetworkS[] = $this->getProfileNetworkInfo($userNetworkF, 'S', true);
+//            }
 
             $allUser = array_filter(array_merge([$this->getProfileNetworkInfo($publicIdMe, 'F', true)],
                 $usersNetworkS));
+
+            if (empty($allUser)) {
+                return [];
+            }
 
             $details = [];
 
@@ -326,7 +330,7 @@ class Controller extends BaseController
 
     public function getProfileNetworkInfo($publicId, $network = 'F', $isProfile = false)
     {
-        $count = 30;
+        $count = 1000;
         $filters = "List(resultType->PEOPLE,connectionOf->$publicId,network->$network)";
         $origin = "GLOBAL_SEARCH_HEADER";
         $q = 'all';
