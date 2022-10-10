@@ -260,7 +260,6 @@ class Controller extends BaseController
 
             $this->cache('cookies', $res->getHeader('Set-Cookie'));
             $data = $this->me();
-            $this->cache('is_true', 'fail');
 
             return response()->json(['data' => $data, 'status' => 200], 200);
         } catch (\Exception $e) {
@@ -270,7 +269,6 @@ class Controller extends BaseController
             preg_match('/{(?:[^{}]*|(?R))*}/', $message, $output_array);
 
             if (!isset($output_array[0])) {
-                $this->cache('is_true', 'success');
                 return response()->json(['data' => null, 'status' => 400, 'message' => $link], 200);
             }
 
