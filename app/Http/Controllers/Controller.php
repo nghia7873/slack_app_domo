@@ -336,12 +336,17 @@ class Controller extends BaseController
         $q = 'all';
         $start = 0;
         $listUsersFirst = [];
+        $maxResult = 17;
 
         while (true) {
+            if (count($listUsersFirst) > $maxResult) {
+                break;
+            }
+
             $queryContext = "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)";
             $hehe = $this->client->get("https://www.linkedin.com/voyager/api/search/blended?count=$count&filters=$filters&origin=$origin&q=$q&start=$start&queryContext=$queryContext");
             $data1 = json_decode($hehe->getBody()->getContents());
-            logger("so lan thuc hien:" . $count);
+
             if (empty($data1->elements)) {
                break;
             }
