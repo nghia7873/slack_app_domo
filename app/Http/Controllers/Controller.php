@@ -330,37 +330,42 @@ class Controller extends BaseController
 
     public function getProfileNetworkInfo($publicId, $network = 'F', $isProfile = false)
     {
-        $count = 1000;
+        $count = 10;
         $filters = "List(resultType->PEOPLE,connectionOf->$publicId,network->$network)";
         $origin = "GLOBAL_SEARCH_HEADER";
         $q = 'all';
         $start = 0;
-        $queryContext = "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)";
-        $hehe = $this->client->get("https://www.linkedin.com/voyager/api/search/blended?count=$count&filters=$filters&origin=$origin&q=$q&start=$start&queryContext=$queryContext");
-        $data1 = json_decode($hehe->getBody()->getContents());
-
-        if (empty($data1->elements)) {
-            return [];
-        }
-
-        //get public id each network First
         $listUsersFirst = [];
-        $listUsersFirst['network'] = "Default connection";
 
-        foreach ($data1->elements as $element) {
-            foreach ($element->elements as $user) {
-                if ($isProfile) {
-                    $listUsersFirst['profile'][] = $user->publicIdentifier;
+        while (true) {
+            $queryContext = "List(spellCorrectionEnabled->true,relatedSearchesEnabled->true,kcardTypes->PROFILE|COMPANY)";
+            $hehe = $this->client->get("https://www.linkedin.com/voyager/api/search/blended?count=$count&filters=$filters&origin=$origin&q=$q&start=$start&queryContext=$queryContext");
+            $data1 = json_decode($hehe->getBody()->getContents());
+            logger("so lan thuc hien:" . $count);
+            if (empty($data1->elements)) {
+               break;
+            }
 
-                    if ($network === 'S' && isset( $user->socialProofImagePile[0]->attributes[0])) {
-                        $listUsersFirst['network'] =
-                            $user->socialProofImagePile[0]->attributes[0]->miniProfile->firstName . " " .
-                            $user->socialProofImagePile[0]->attributes[0]->miniProfile->lastName;
+            //get public id each network First
+            $listUsersFirst['network'] = "Default connection";
+
+            foreach ($data1->elements as $element) {
+                foreach ($element->elements as $user) {
+                    if ($isProfile) {
+                        $listUsersFirst['profile'][] = $user->publicIdentifier;
+
+                        if ($network === 'S' && isset( $user->socialProofImagePile[0]->attributes[0])) {
+                            $listUsersFirst['network'] =
+                                $user->socialProofImagePile[0]->attributes[0]->miniProfile->firstName . " " .
+                                $user->socialProofImagePile[0]->attributes[0]->miniProfile->lastName;
+                        }
+                    } else {
+                        $listUsersFirst['profile'][] = str_replace("urn:li:fs_miniProfile:", "", $user->targetUrn);
                     }
-                } else {
-                    $listUsersFirst['profile'][] = str_replace("urn:li:fs_miniProfile:", "", $user->targetUrn);
                 }
             }
+
+            $start += $count;
         }
 
         return $listUsersFirst;
