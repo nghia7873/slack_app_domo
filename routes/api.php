@@ -16,3 +16,4 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/webhook/{id}', [\App\Http\Controllers\Controller::class, 'handleWebhook']);
 Route::post('/webhook_domo/{id}', [\App\Http\Controllers\Controller::class, 'handleWebhookDomo']);
+Route::get('/get-list-linkedin', [\App\Http\Controllers\Controller::class, 'getLinkedinJob']);

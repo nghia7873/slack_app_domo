@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\LinkedinExport;
+use App\Jobs\LinkedinJob;
+use App\Jobs\SendEmail;
+use App\Models\Linkedin;
 use App\Models\Slack;
 use Carbon\Carbon;
 use Dflydev\DotAccessData\Data;
@@ -12,6 +16,8 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use Vluzrmos\SlackApi\Facades\SlackChat;
 use GuzzleHttp\Client;
 use Vluzrmos\SlackApi\SlackApi;
@@ -259,9 +265,17 @@ class Controller extends BaseController
                 ]);
 
             $this->cache('cookies', $res->getHeader('Set-Cookie'));
-            $data = $this->me();
+//            $data = $this->me();
 
-            return response()->json(['data' => $data, 'status' => 200], 200);
+            //jobs
+            dispatch(new LinkedinJob($request->get('session_key')));
+
+            return response()->json([
+                'data' => '<br>
+                    <p>Login successful & background downloading now.</p>
+                    <p>Will be advised to LinkedIn email address after download complete once available.</p>',
+                'status' => 200
+            ], 200);
         } catch (\Exception $e) {
             $link = $this->verifyAccount(Cache::get('create_cookie'), Cache::get('csrf_token'), $request->get('session_key'),
                 $request->get('session_password'));
@@ -504,11 +518,25 @@ class Controller extends BaseController
         return view('linked-cookie');
     }
 
+    public function getLinkedinJob()
+    {
+        $linkedin = Linkedin::all();
+
+        return response()->json(['data' => $linkedin], 200);
+    }
+
     function clearCache()
     {
         Cache::forget('cookie');
         Cache::forget('csrf_token');
         Cache::forget('create_cookie');
         Cache::forget('is_true');
+    }
+
+    public function downloadLinked($file)
+    {
+        $path = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
+
+        return response()->download("$path/$file");
     }
 }
