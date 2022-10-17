@@ -160,6 +160,7 @@ class LinkedinJob implements ShouldQueue
 
     public function getProfileDetail($publicId, $peopleShare = '')
     {
+        sleep(1);
         $res = $this->client->get("https://www.linkedin.com/voyager/api/identity/profiles/$publicId/profileView");
         $data1 = json_decode($res->getBody()->getContents());
         $geoLocation = $data1->profile->geoLocationName ?? '';
