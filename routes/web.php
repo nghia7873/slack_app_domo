@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('/', function() {
-    return view('test');
-});
 //Route::get('/', [\App\Http\Controllers\Controller::class, 'showListAccountSlack'])->name('list-slack');
 Route::get('/slack/{id}', [\App\Http\Controllers\Controller::class, 'editAccountSlack'])->name('edit-slack');
 Route::get('/slack', [\App\Http\Controllers\Controller::class, 'createAccountSlack'])->name('create-slack');

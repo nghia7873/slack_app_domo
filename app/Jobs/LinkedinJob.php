@@ -24,7 +24,7 @@ class LinkedinJob implements ShouldQueue
     public $client;
     public $email;
 
-    public $timeout = 86400;
+    public $timeout = 0;
 
     /**
      * Create a new job instance.
@@ -33,6 +33,7 @@ class LinkedinJob implements ShouldQueue
      */
     public function __construct($email)
     {
+        set_time_limit(0);
         $this->email = $email;
     }
 
@@ -103,7 +104,7 @@ class LinkedinJob implements ShouldQueue
         $q = 'all';
         $start = 0;
         $listUsersFirst = [];
-        $maxResult = 50;
+        $maxResult = 400;
 
         $startDate = Carbon::now();  //08
         logger("start : $startDate");
@@ -116,7 +117,7 @@ class LinkedinJob implements ShouldQueue
             logger("Timerun : $timeRune");
 
             if ($isMaxResult && $isRateLimit) {
-                sleep(60);
+                sleep(3600);
                 $startDate = Carbon::now(); //09:10
                 logger("startNew : $startDate");
                 $endDate = $startDate->copy()->addHour(); //10:10
