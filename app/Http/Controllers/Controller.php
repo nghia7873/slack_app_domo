@@ -520,7 +520,7 @@ class Controller extends BaseController
 
     public function getLinkedinJob()
     {
-        $linkedin = Linkedin::all();
+        $linkedin = Linkedin::select('name', 'link')->get();
 
         return response()->json(['data' => $linkedin], 200);
     }

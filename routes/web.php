@@ -26,6 +26,6 @@ Route::post('/linked-cookie', [\App\Http\Controllers\Controller::class, 'handleL
 Route::get('/me', [\App\Http\Controllers\Controller::class, 'me']);
 Route::get('/export', [\App\Http\Controllers\Controller::class, 'export']);
 Route::get('/clear-cache', [\App\Http\Controllers\Controller::class, 'clearCache']);
-Route::get('/download-linked', [\App\Http\Controllers\Controller::class, 'downloadLinked']);
+Route::get('/download-linked/{link}', [\App\Http\Controllers\Controller::class, 'downloadLinked']);
 
 
