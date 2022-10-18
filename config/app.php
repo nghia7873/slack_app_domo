@@ -194,7 +194,9 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        \Vluzrmos\SlackApi\SlackApiServiceProvider::class
+        \Vluzrmos\SlackApi\SlackApiServiceProvider::class,
+
+        Maatwebsite\Excel\ExcelServiceProvider::class,
 
     ],
 
@@ -264,6 +266,7 @@ return [
         'SlackTeam'             => Vluzrmos\SlackApi\Facades\SlackTeam::class,
         'SlackOAuth'          => Vluzrmos\SlackApi\Facades\SlackOAuth::class,
         'SlackOAuthV2'          => Vluzrmos\SlackApi\Facades\SlackOAuthV2::class,
+        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
     ],
 
 ];
