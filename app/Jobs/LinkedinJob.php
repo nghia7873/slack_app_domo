@@ -25,6 +25,7 @@ class LinkedinJob implements ShouldQueue
     public $email;
 
     public $timeout = 0;
+    public $tries  = 3;
 
     /**
      * Create a new job instance.
