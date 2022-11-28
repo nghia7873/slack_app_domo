@@ -25,4 +25,8 @@ Route::get('/export', [\App\Http\Controllers\Controller::class, 'export']);
 Route::get('/clear-cache', [\App\Http\Controllers\Controller::class, 'clearCache']);
 Route::get('/download-linked/{link}', [\App\Http\Controllers\Controller::class, 'downloadLinked']);
 
+Route::get('/cube', [\App\Http\Controllers\Controller::class, 'cube'])->name('cube');
+Route::post('/cube', [\App\Http\Controllers\Controller::class, 'handleCube'])->name('handle-cube');
+Route::get('/test/ec-cube', [\App\Http\Controllers\Controller::class, 'eccube'])->name('ec-cube');
+Route::get('/test/ec-cube/redirect', [\App\Http\Controllers\Controller::class, 'eccubeRedirect']);
 
