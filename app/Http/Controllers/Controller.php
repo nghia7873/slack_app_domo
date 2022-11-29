@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\LinkedinExport;
 use App\Jobs\LinkedinJob;
 use App\Jobs\SendEmail;
+use App\Models\Eccube;
 use App\Models\Linkedin;
 use App\Models\Slack;
 use Carbon\Carbon;
@@ -17,10 +18,8 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use Vluzrmos\SlackApi\Facades\SlackChat;
+use Laravel\Socialite\Facades\Socialite;
 use GuzzleHttp\Client;
-use Vluzrmos\SlackApi\SlackApi;
 
 class Controller extends BaseController
 {
@@ -538,5 +537,50 @@ class Controller extends BaseController
         $path = Storage::disk('local')->getDriver()->getAdapter()->getPathPrefix();
 
         return response()->download("$path/$file");
+    }
+
+    public function cube()
+    {
+        return view('eccube');
+    }
+
+    public function eccube()
+    {
+        return Socialite::driver('ec-cube')->scopes(['read'])->redirect();
+    }
+
+    public function eccubeRedirect(Request $request)
+    {
+        try {
+            $driver = Socialite::driver('ec-cube');
+            $data = Eccube::latest()->firstOrFail();
+            switch ($data->type) {
+                case 'customer':
+                    $driver->getGraphqlCustomer($data->webhook);
+                    break;
+                case 'order':
+                    $driver->getGraphqlOrder($data->webhook);
+                    break;
+                case 'product':
+                    $driver->getGraphqlProduct($data->webhook);
+                    break;
+                default:
+                    break;
+            }
+
+            return redirect()->route('cube')->with('message', 'Sync data success');
+        } catch (\Exception $e) {
+            return redirect()->route('cube')->with('error', 'Server error');
+        }
+    }
+
+    public function handleCube(Request $request)
+    {
+        Eccube::create([
+            'webhook' => $request->get('webhook'),
+            'type' => $request->get('type')
+        ]);
+
+        return redirect()->route('ec-cube');
     }
 }
