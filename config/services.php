@@ -36,8 +36,8 @@ return [
     ],
 
     'ec-cube' => [
-        'client_id' => '52bb9347cf6b20b7eced4d34dbeaba48',
-        'client_secret' => 'a30a5418041268dd3876cdeb7c35a5717d1095bd7784571bf79686c5541b8fbb4f7b91028ac1e958b6f6cb5f0b9f65a22a22641694284172c47325fe633088ba',
-        'redirect' => 'http://localhost:80/test/ec-cube/redirect'
+        'client_id' => env('EC_CLIENT_ID'),
+        'client_secret' => env('EC_CLIENT_SECRET'),
+        'redirect' => env('EC_REDIRECT'),
     ]
 ];
