@@ -570,6 +570,7 @@ class Controller extends BaseController
 
             return redirect()->route('cube')->with('message', 'Sync data success');
         } catch (\Exception $e) {
+            logger("ECCUBE : $e");
             return redirect()->route('cube')->with('error', 'Server error');
         }
     }
