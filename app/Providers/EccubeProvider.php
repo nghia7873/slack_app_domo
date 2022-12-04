@@ -77,7 +77,7 @@ class EccubeProvider extends AbstractProvider
             'headers' => [ 'Content-Type' => 'application/json' ]
         ]);
 
-        $array = collect($data)->chunk(self::CHUNK_ROW)->toArray();
+        $array = collect($data)->chunk(150)->toArray();
 
         foreach ($array as $item) {
             $response = $client->post($link,
