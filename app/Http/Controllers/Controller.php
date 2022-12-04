@@ -554,6 +554,7 @@ class Controller extends BaseController
         try {
             $driver = Socialite::driver('ec-cube');
             $data = Eccube::latest()->firstOrFail();
+
             switch ($data->type) {
                 case 'customer':
                     $driver->getGraphqlCustomer($data->webhook);
@@ -583,5 +584,10 @@ class Controller extends BaseController
         ]);
 
         return redirect()->route('ec-cube');
+    }
+
+    public function hook(Request $request)
+    {
+        logger('hehe', $request->all());
     }
 }
