@@ -46,15 +46,15 @@
     </style>
 </head>
 <div class="container">
-    <h2>Config webhook ec cube</h2>
+    <h2>Config webhook EC CUBE</h2>
     <form action="{{ route('handle-cube') }}" method="POST">
         @csrf
         <div class="form-group">
-            <label for="token">Webhook ec cube:</label>
+            <label for="token">Webhook EC CUBE:</label>
             <input type="text" class="form-control" id="webhook" name="webhook" required>
         </div>
         <div class="form-group">
-            <label for="token">Select type ec cube:</label>
+            <label for="token">Select type EC CUBE:</label>
             <select class="form-select" name="type">
                 <option value="customer">Customer</option>
                 <option value="order">Order</option>
