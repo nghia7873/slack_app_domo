@@ -29,4 +29,5 @@ Route::get('/cube', [\App\Http\Controllers\Controller::class, 'cube'])->name('cu
 Route::post('/cube', [\App\Http\Controllers\Controller::class, 'handleCube'])->name('handle-cube');
 Route::get('/test/ec-cube', [\App\Http\Controllers\Controller::class, 'eccube'])->name('ec-cube');
 Route::get('/test/ec-cube/redirect', [\App\Http\Controllers\Controller::class, 'eccubeRedirect']);
+Route::post('/webhook/ec', [\App\Http\Controllers\Controller::class, 'hook']);
 

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\OauthEccube;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
 use Laravel\Socialite\Two\AbstractProvider;
@@ -61,13 +62,15 @@ class EccubeProvider extends AbstractProvider
         $data = [];
         $page = 1;
         $customer = $this->getOrderByToken($token, $page);
+        $handle = $this->handleDataOrder($customer['data']['orders']['nodes']);
 
-        $data = array_merge($data,  $customer['data']['orders']['nodes']);
+        $data = array_merge($data,  $handle);
 
         while($customer['data']['orders']['pageInfo']['hasNextPage']) {
             $page++;
             $customer = $this->getOrderByToken($token, $page);
-            $data = array_merge($data,  $customer['data']['orders']['nodes']);
+            $handle = $this->handleDataOrder($customer['data']['orders']['nodes']);
+            $data = array_merge($data,  $handle);
         }
 
         $client = new Client([
@@ -113,6 +116,8 @@ class EccubeProvider extends AbstractProvider
             }
 
             $maxPrice = collect($priceAll)->max('price');
+            $maxStock = collect($priceAll)->sum('stock');
+
             $categoryMax = implode(", ",$categoryAll);
             $data[] = [
               'id' => $product['id'],
@@ -120,7 +125,29 @@ class EccubeProvider extends AbstractProvider
               'description_detail' => $product['description_detail'],
               'price' => $maxPrice,
               'category' => $categoryMax,
+              'stock' => $maxStock,
             ];
+        }
+
+        return $data;
+    }
+
+    private function handleDataOrder($orders)
+    {
+        $data = [];
+        foreach ($orders as $order) {
+            $ordersItems = collect($order['OrderItems']);
+            $filtered  = $ordersItems->filter(function ($value) {
+               return $value['class_name1'] != null;
+            });
+            $quantityMax = $filtered->sum('quantity');
+            $productName = $filtered->first()['product_name'];
+            unset($order['OrderItems']);
+
+            $order['quantity'] = $quantityMax;
+            $order['product_name'] = $productName;
+
+            $data[] = $order;
         }
 
         return $data;
@@ -130,6 +157,19 @@ class EccubeProvider extends AbstractProvider
     {
         $response = $this->getAccessTokenResponse($this->getCode());
         $token = Arr::get($response, 'access_token');
+        $refreshToken = Arr::get($response, 'refresh_token');
+        $data = OauthEccube::latest()->first();
+        if ($data) {
+            $data->update([
+                'access_token' => $token,
+                'refresh_token' => $refreshToken
+            ]);
+        } else {
+            OauthEccube::create([
+                'access_token' => $token,
+                'refresh_token' => $refreshToken
+            ]);
+        }
 
         $data = [];
         $page = 1;
@@ -300,6 +340,12 @@ class EccubeProvider extends AbstractProvider
                     addr01
                     addr02
                     postal_code
+                    OrderItems {
+                      quantity
+                      product_name
+                      class_name1
+                    }
+                    discount
                 }
                 totalCount
                 pageInfo {
