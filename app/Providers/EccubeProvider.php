@@ -21,6 +21,92 @@ class EccubeProvider extends AbstractProvider
         return $this->buildAuthUrlFromBase($this->getEccubeUrl() . '/gtmadmin/authorize', $state);
     }
 
+    public function getGraphqlCustomerHook($link, $id)
+    {
+        $response = $this->getAccessTokenResponse($this->getCode());
+        $token = Arr::get($response, 'access_token');
+
+        $data = [];
+        $customer = $this->getCustomerByTokenHook($token, $id);
+
+        $data = array_merge($data,  $customer['data']['customers']['nodes']);
+
+        $client = new Client([
+            'headers' => [ 'Content-Type' => 'application/json' ]
+        ]);
+
+        $array = collect($data)->chunk(self::CHUNK_ROW)->toArray();
+
+        foreach ($array as $item) {
+            $client->post($link,
+                [
+                    'body' => json_encode($item)
+                ]
+            );
+        }
+
+        return true;
+    }
+
+    public function getGraphqlOrderHook($link, $id)
+    {
+        $response = $this->getAccessTokenResponse($this->getCode());
+        $token = Arr::get($response, 'access_token');
+
+        $data = [];
+        $page = 1;
+        $customer = $this->getOrderByTokenHook($token, $page);
+        $handle = $this->handleDataOrder($customer['data']['orders']['nodes']);
+
+        $data = array_merge($data,  $handle);
+
+        while($customer['data']['orders']['pageInfo']['hasNextPage']) {
+            $page++;
+            $customer = $this->getOrderByToken($token, $page);
+            $handle = $this->handleDataOrder($customer['data']['orders']['nodes']);
+            $data = array_merge($data,  $handle);
+        }
+
+        $client = new Client([
+            'headers' => [ 'Content-Type' => 'application/json' ]
+        ]);
+
+        $array = collect($data)->chunk(150)->toArray();
+
+        foreach ($array as $item) {
+            $response = $client->post($link,
+                [
+                    'body' => json_encode(array_values($item))
+                ]
+            );
+        }
+
+        return true;
+    }
+
+    public function getGraphqlProductHook($link, $id)
+    {
+        $oauth2 = OauthEccube::latest()->first();
+
+        $token = $oauth2->access_token;
+
+        $customer = $this->getProductByTokenHook($token, $id);
+        $nodes = [$customer['data']['product']];
+        $data = $this->handleDataProduct($nodes);
+
+        $client = new Client([
+            'headers' => [ 'Content-Type' => 'application/json' ]
+        ]);
+
+        $client->post($link,
+                [
+                    'body' => json_encode(array_values($data))
+                ]
+            );
+
+        return true;
+    }
+
     public function getGraphqlCustomer($link)
     {
         $response = $this->getAccessTokenResponse($this->getCode());
@@ -117,8 +203,12 @@ class EccubeProvider extends AbstractProvider
 
             $maxPrice = collect($priceAll)->max('price');
             $maxStock = collect($priceAll)->sum('stock');
+            $categoryMax = '';
 
-            $categoryMax = implode(", ",$categoryAll);
+            if (!empty($categoryAll)) {
+                $categoryMax = implode(", ", $categoryAll);
+            }
+
             $data[] = [
               'id' => $product['id'],
               'name' => $product['name'],
@@ -158,12 +248,9 @@ class EccubeProvider extends AbstractProvider
         $response = $this->getAccessTokenResponse($this->getCode());
         $token = Arr::get($response, 'access_token');
         $refreshToken = Arr::get($response, 'refresh_token');
-        $data = OauthEccube::latest()->first();
-        if ($data) {
-            $data->update([
-                'access_token' => $token,
-                'refresh_token' => $refreshToken
-            ]);
+        $oauth2 = OauthEccube::latest()->first();
+        if ($oauth2) {
+            $token = $oauth2->access_token;
         } else {
             OauthEccube::create([
                 'access_token' => $token,
@@ -173,7 +260,9 @@ class EccubeProvider extends AbstractProvider
 
         $data = [];
         $page = 1;
+
         $customer = $this->getProductByToken($token, $page);
+
         $handle = $this->handleDataProduct($customer['data']['products']['nodes']);
 
         $data = array_merge($data, $handle);
@@ -269,6 +358,127 @@ class EccubeProvider extends AbstractProvider
                 }
               }
             }
+        GRAPHQL;
+
+        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'query' => $query
+            ])
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    protected function getCustomerByTokenHook($token, $id)
+    {
+        $query = <<<"GRAPHQL"
+            query {
+               customers (page: $page) {
+                nodes {
+                  id
+                  name01
+                  name02
+                  email
+                  addr01
+                  addr02
+                  phone_number
+                }
+                totalCount
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                }
+              }
+            }
+        GRAPHQL;
+
+        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'query' => $query
+            ])
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    protected function getOrderByTokenHook($token, $id)
+    {
+        $query = <<<"GRAPHQL"
+            query {
+              orders (page: $page) {
+                nodes {
+                  id
+                  payment_method
+                  payment_date
+                  payment_total
+                    name01
+                    name02
+                    kana01
+                    kana02
+                    order_date
+                    create_date
+                    phone_number
+                    addr01
+                    addr02
+                    postal_code
+                    OrderItems {
+                      quantity
+                      product_name
+                      class_name1
+                    }
+                    discount
+                }
+                totalCount
+                pageInfo {
+                    hasNextPage
+                    hasPreviousPage
+                }
+              }
+            }
+        GRAPHQL;
+
+        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'query' => $query
+            ])
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    protected function getProductByTokenHook($token, $id)
+    {
+        $query = <<<"GRAPHQL"
+            query {
+              product (id: $id) {
+                        id
+                        name
+                        description_detail
+                        create_date
+                        ProductClasses {
+                            price01
+                            price02
+                            stock
+                        }
+                        ProductCategories {
+                            Category {
+                                name
+                            }
+                        }
+                }
+           }
         GRAPHQL;
 
         $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
