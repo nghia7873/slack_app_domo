@@ -578,16 +578,50 @@ class Controller extends BaseController
 
     public function handleCube(Request $request)
     {
-        Eccube::create([
-            'webhook' => $request->get('webhook'),
-            'type' => $request->get('type')
-        ]);
+        Eccube::updateOrCreate(
+            [
+                'type' => $request->get('type')
+            ],
+            [
+                'webhook' => $request->get('webhook'),
+            ],
+        );
 
         return redirect()->route('ec-cube');
     }
 
     public function hook(Request $request)
     {
-        logger('hehe', $request->all());
+        try {
+            foreach ($request->all() as $data) {
+                $entity = $data['entity'];
+                $action = $data['action'];
+                if ($action != 'created') {
+                    break;
+                }
+                $id = $data['id'];
+                $driver = Socialite::driver('ec-cube');
+
+                $webhook = Eccube::where('type', $entity)->firstOrFail();
+
+                switch ($entity) {
+                    case 'customer':
+                        $driver->getGraphqlCustomerHook($webhook->webhook, $id);
+                        break;
+                    case 'order':
+                        $driver->getGraphqlOrderHook($webhook->webhook, $id);
+                        break;
+                    case 'product':
+                        $driver->getGraphqlProductHook($webhook->webhook, $id);
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+        } catch (\Exception $e) {
+            logger("hook : $e");
+            return redirect()->route('cube')->with('error', 'Server error');
+        }
     }
 }

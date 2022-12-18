@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\OauthEccube;
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Arr;
 use Laravel\Socialite\Two\AbstractProvider;
 
@@ -19,6 +20,118 @@ class EccubeProvider extends AbstractProvider
     protected function getAuthUrl($state)
     {
         return $this->buildAuthUrlFromBase($this->getEccubeUrl() . '/gtmadmin/authorize', $state);
+    }
+
+    public function getAccessTokenByRefreshToken($code)
+    {
+        $response = $this->getHttpClient()->post($this->getTokenUrl(), [
+            RequestOptions::HEADERS => $this->getTokenHeaders($code),
+            RequestOptions::FORM_PARAMS => $this->getTokenFieldsRefresh($code),
+        ]);
+
+        return json_decode($response->getBody(), true);
+    }
+
+    protected function getTokenFieldsRefresh($code)
+    {
+        return [
+            'grant_type' => 'refresh_token',
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'refresh_token' => $code,
+            'redirect_uri' => $this->redirectUrl,
+        ];
+    }
+
+    public function getGraphqlCustomerHook($link, $id)
+    {
+        $oauth2 = OauthEccube::latest()->first();
+
+        $refreshToken = $oauth2->refresh_token;
+        $response = $this->getAccessTokenByRefreshToken($refreshToken);
+        $token = Arr::get($response, 'access_token');
+        $refresh = Arr::get($response, 'refresh_token');
+
+        $oauth2->update([
+            'access_token' => $token,
+            'refresh_token' => $refresh
+        ]);
+
+        $customer = $this->getCustomerByTokenHook($token, $id);
+        $customer = $customer['data']['customer'];
+        $client = new Client([
+            'headers' => [ 'Content-Type' => 'application/json' ]
+        ]);
+
+        $client->post($link,
+            [
+                'body' => json_encode($customer)
+            ]
+        );
+
+        return true;
+    }
+
+    public function getGraphqlOrderHook($link, $id)
+    {
+        $oauth2 = OauthEccube::latest()->first();
+        $refreshToken = $oauth2->refresh_token;
+        $response = $this->getAccessTokenByRefreshToken($refreshToken);
+        $token = Arr::get($response, 'access_token');
+        $refresh = Arr::get($response, 'refresh_token');
+
+        $oauth2->update([
+            'access_token' => $token,
+            'refresh_token' => $refresh
+        ]);
+
+        $customer = $this->getOrderByTokenHook($token, $id);
+
+        $nodes = [$customer['data']['order']];
+        $data = $this->handleDataOrder($nodes);
+
+        $client = new Client([
+            'headers' => [ 'Content-Type' => 'application/json' ]
+        ]);
+
+        $client->post($link,
+            [
+                'body' => json_encode(array_values($data))
+            ]
+        );
+
+        return true;
+    }
+
+    public function getGraphqlProductHook($link, $id)
+    {
+        $oauth2 = OauthEccube::latest()->first();
+        $refreshToken = $oauth2->refresh_token;
+        $response = $this->getAccessTokenByRefreshToken($refreshToken);
+        $token = Arr::get($response, 'access_token');
+        $refresh = Arr::get($response, 'refresh_token');
+
+        $oauth2->update([
+           'access_token' => $token,
+           'refresh_token' => $refresh
+        ]);
+
+        $customer = $this->getProductByTokenHook($token, $id);
+
+        $nodes = [$customer['data']['product']];
+        $data = $this->handleDataProduct($nodes);
+
+        $client = new Client([
+            'headers' => [ 'Content-Type' => 'application/json' ]
+        ]);
+
+        $client->post($link,
+                [
+                    'body' => json_encode(array_values($data))
+                ]
+            );
+
+        return true;
     }
 
     public function getGraphqlCustomer($link)
@@ -117,8 +230,12 @@ class EccubeProvider extends AbstractProvider
 
             $maxPrice = collect($priceAll)->max('price');
             $maxStock = collect($priceAll)->sum('stock');
+            $categoryMax = '';
 
-            $categoryMax = implode(", ",$categoryAll);
+            if (!empty($categoryAll)) {
+                $categoryMax = implode(", ", $categoryAll);
+            }
+
             $data[] = [
               'id' => $product['id'],
               'name' => $product['name'],
@@ -158,12 +275,9 @@ class EccubeProvider extends AbstractProvider
         $response = $this->getAccessTokenResponse($this->getCode());
         $token = Arr::get($response, 'access_token');
         $refreshToken = Arr::get($response, 'refresh_token');
-        $data = OauthEccube::latest()->first();
-        if ($data) {
-            $data->update([
-                'access_token' => $token,
-                'refresh_token' => $refreshToken
-            ]);
+        $oauth2 = OauthEccube::latest()->first();
+        if ($oauth2) {
+            $token = $oauth2->access_token;
         } else {
             OauthEccube::create([
                 'access_token' => $token,
@@ -173,7 +287,9 @@ class EccubeProvider extends AbstractProvider
 
         $data = [];
         $page = 1;
+
         $customer = $this->getProductByToken($token, $page);
+
         $handle = $this->handleDataProduct($customer['data']['products']['nodes']);
 
         $data = array_merge($data, $handle);
@@ -269,6 +385,113 @@ class EccubeProvider extends AbstractProvider
                 }
               }
             }
+        GRAPHQL;
+
+        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'query' => $query
+            ])
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    protected function getCustomerByTokenHook($token, $id)
+    {
+        $query = <<<"GRAPHQL"
+            query {
+               customer (id: $id) {
+                  id
+                  name01
+                  name02
+                  email
+                  addr01
+                  addr02
+                  phone_number
+              }
+            }
+        GRAPHQL;
+
+        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'query' => $query
+            ])
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    protected function getOrderByTokenHook($token, $id)
+    {
+        $query = <<<"GRAPHQL"
+            query {
+              order (id: $id) {
+                  id
+                  payment_method
+                  payment_date
+                  payment_total
+                    name01
+                    name02
+                    kana01
+                    kana02
+                    order_date
+                    create_date
+                    phone_number
+                    addr01
+                    addr02
+                    postal_code
+                    OrderItems {
+                      quantity
+                      product_name
+                      class_name1
+                    }
+                    discount
+              }
+            }
+        GRAPHQL;
+
+        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'query' => $query
+            ])
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    protected function getProductByTokenHook($token, $id)
+    {
+        $query = <<<"GRAPHQL"
+            query {
+              product (id: $id) {
+                        id
+                        name
+                        description_detail
+                        create_date
+                        ProductClasses {
+                            price01
+                            price02
+                            stock
+                        }
+                        ProductCategories {
+                            Category {
+                                name
+                            }
+                        }
+                }
+           }
         GRAPHQL;
 
         $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
