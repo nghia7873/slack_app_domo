@@ -229,23 +229,35 @@ class EccubeProvider extends AbstractProvider
         foreach ($products as $product) {
             $priceAll = [];
             $categoryAll = [];
-            $productClasses = $product['ProductClasses'];
-            $productCategories = $product['ProductCategories'];
-            foreach ($productClasses as $price) {
-                if (isset($price['price02'])) {
-                    $priceAll[] = [
-                        'price' => $price['price02'],
-                        'stock' => $price['stock']
-                    ];
-                } else {
-                    $priceAll[] = [
-                        'price' => $price['price01'],
-                        'stock' => $price['stock']
-                    ];
+            $productClasses = $product['ProductClasses'] ?? null;
+            $productCategories = $product['ProductCategories'] ?? null;
+            if ($productClasses) {
+                foreach ($productClasses as $price) {
+                    if (isset($price['price02'])) {
+                        $priceAll[] = [
+                            'price' => $price['price02'],
+                            'stock' => $price['stock']
+                        ];
+                    } else {
+                        $priceAll[] = [
+                            'price' => $price['price01'],
+                            'stock' => $price['stock']
+                        ];
+                    }
                 }
+            } else {
+                $priceAll[] = [
+                    'price' => 0,
+                    'stock' => 0
+                ];
             }
-            foreach ($productCategories as $category) {
-                $categoryAll[] = $category['Category']['name'] ?? '';
+
+            if ($productCategories) {
+                foreach ($productCategories as $category) {
+                    $categoryAll[] = $category['Category']['name'] ?? '';
+                }
+            } else {
+                $categoryAll[] = '';
             }
 
             $maxPrice = collect($priceAll)->max('price');
