@@ -596,6 +596,9 @@ class Controller extends BaseController
             foreach ($request->all() as $data) {
                 $entity = $data['entity'];
                 $action = $data['action'];
+                if ($action != 'created') {
+                    break;
+                }
                 $id = $data['id'];
                 $driver = Socialite::driver('ec-cube');
 

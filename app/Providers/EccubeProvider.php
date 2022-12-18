@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\OauthEccube;
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Arr;
 use Laravel\Socialite\Two\AbstractProvider;
 
@@ -21,65 +22,83 @@ class EccubeProvider extends AbstractProvider
         return $this->buildAuthUrlFromBase($this->getEccubeUrl() . '/gtmadmin/authorize', $state);
     }
 
+    public function getAccessTokenByRefreshToken($code)
+    {
+        $response = $this->getHttpClient()->post($this->getTokenUrl(), [
+            RequestOptions::HEADERS => $this->getTokenHeaders($code),
+            RequestOptions::FORM_PARAMS => $this->getTokenFieldsRefresh($code),
+        ]);
+
+        return json_decode($response->getBody(), true);
+    }
+
+    protected function getTokenFieldsRefresh($code)
+    {
+        return [
+            'grant_type' => 'refresh_token',
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'refresh_token' => $code,
+            'redirect_uri' => $this->redirectUrl,
+        ];
+    }
+
     public function getGraphqlCustomerHook($link, $id)
     {
-        $response = $this->getAccessTokenResponse($this->getCode());
+        $oauth2 = OauthEccube::latest()->first();
+
+        $refreshToken = $oauth2->refresh_token;
+        $response = $this->getAccessTokenByRefreshToken($refreshToken);
         $token = Arr::get($response, 'access_token');
+        $refresh = Arr::get($response, 'refresh_token');
 
-        $data = [];
+        $oauth2->update([
+            'access_token' => $token,
+            'refresh_token' => $refresh
+        ]);
+
         $customer = $this->getCustomerByTokenHook($token, $id);
-
-        $data = array_merge($data,  $customer['data']['customers']['nodes']);
-
+        $customer = $customer['data']['customer'];
         $client = new Client([
             'headers' => [ 'Content-Type' => 'application/json' ]
         ]);
 
-        $array = collect($data)->chunk(self::CHUNK_ROW)->toArray();
-
-        foreach ($array as $item) {
-            $client->post($link,
-                [
-                    'body' => json_encode($item)
-                ]
-            );
-        }
+        $client->post($link,
+            [
+                'body' => json_encode($customer)
+            ]
+        );
 
         return true;
     }
 
     public function getGraphqlOrderHook($link, $id)
     {
-        $response = $this->getAccessTokenResponse($this->getCode());
+        $oauth2 = OauthEccube::latest()->first();
+        $refreshToken = $oauth2->refresh_token;
+        $response = $this->getAccessTokenByRefreshToken($refreshToken);
         $token = Arr::get($response, 'access_token');
+        $refresh = Arr::get($response, 'refresh_token');
 
-        $data = [];
-        $page = 1;
-        $customer = $this->getOrderByTokenHook($token, $page);
-        $handle = $this->handleDataOrder($customer['data']['orders']['nodes']);
+        $oauth2->update([
+            'access_token' => $token,
+            'refresh_token' => $refresh
+        ]);
 
-        $data = array_merge($data,  $handle);
+        $customer = $this->getOrderByTokenHook($token, $id);
 
-        while($customer['data']['orders']['pageInfo']['hasNextPage']) {
-            $page++;
-            $customer = $this->getOrderByToken($token, $page);
-            $handle = $this->handleDataOrder($customer['data']['orders']['nodes']);
-            $data = array_merge($data,  $handle);
-        }
+        $nodes = [$customer['data']['order']];
+        $data = $this->handleDataOrder($nodes);
 
         $client = new Client([
             'headers' => [ 'Content-Type' => 'application/json' ]
         ]);
 
-        $array = collect($data)->chunk(150)->toArray();
-
-        foreach ($array as $item) {
-            $response = $client->post($link,
-                [
-                    'body' => json_encode(array_values($item))
-                ]
-            );
-        }
+        $client->post($link,
+            [
+                'body' => json_encode(array_values($data))
+            ]
+        );
 
         return true;
     }
@@ -87,10 +106,18 @@ class EccubeProvider extends AbstractProvider
     public function getGraphqlProductHook($link, $id)
     {
         $oauth2 = OauthEccube::latest()->first();
+        $refreshToken = $oauth2->refresh_token;
+        $response = $this->getAccessTokenByRefreshToken($refreshToken);
+        $token = Arr::get($response, 'access_token');
+        $refresh = Arr::get($response, 'refresh_token');
 
-        $token = $oauth2->access_token;
+        $oauth2->update([
+           'access_token' => $token,
+           'refresh_token' => $refresh
+        ]);
 
         $customer = $this->getProductByTokenHook($token, $id);
+
         $nodes = [$customer['data']['product']];
         $data = $this->handleDataProduct($nodes);
 
@@ -377,8 +404,7 @@ class EccubeProvider extends AbstractProvider
     {
         $query = <<<"GRAPHQL"
             query {
-               customers (page: $page) {
-                nodes {
+               customer (id: $id) {
                   id
                   name01
                   name02
@@ -386,12 +412,6 @@ class EccubeProvider extends AbstractProvider
                   addr01
                   addr02
                   phone_number
-                }
-                totalCount
-                pageInfo {
-                    hasNextPage
-                    hasPreviousPage
-                }
               }
             }
         GRAPHQL;
@@ -413,8 +433,7 @@ class EccubeProvider extends AbstractProvider
     {
         $query = <<<"GRAPHQL"
             query {
-              orders (page: $page) {
-                nodes {
+              order (id: $id) {
                   id
                   payment_method
                   payment_date
@@ -435,12 +454,6 @@ class EccubeProvider extends AbstractProvider
                       class_name1
                     }
                     discount
-                }
-                totalCount
-                pageInfo {
-                    hasNextPage
-                    hasPreviousPage
-                }
               }
             }
         GRAPHQL;
