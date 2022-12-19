@@ -56,7 +56,7 @@ class EccubeProvider extends AbstractProvider
             'access_token' => $token,
             'refresh_token' => $refresh
         ]);
-
+        sleep(3);
         $customer = $this->getCustomerByTokenHook($token, $id);
         $customer = $customer['data']['customer'];
         $client = new Client([
@@ -85,6 +85,7 @@ class EccubeProvider extends AbstractProvider
             'refresh_token' => $refresh
         ]);
 
+        sleep(3);
         $customer = $this->getOrderByTokenHook($token, $id);
 
         $nodes = [$customer['data']['order']];
@@ -116,6 +117,7 @@ class EccubeProvider extends AbstractProvider
            'refresh_token' => $refresh
         ]);
 
+        sleep(3);
         $customer = $this->getProductByTokenHook($token, $id);
 
         $nodes = [$customer['data']['product']];

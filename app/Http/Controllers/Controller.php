@@ -603,7 +603,6 @@ class Controller extends BaseController
                 $driver = Socialite::driver('ec-cube');
 
                 $webhook = Eccube::where('type', $entity)->firstOrFail();
-
                 switch ($entity) {
                     case 'customer':
                         $driver->getGraphqlCustomerHook($webhook->webhook, $id);
