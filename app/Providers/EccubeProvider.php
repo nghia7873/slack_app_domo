@@ -526,7 +526,8 @@ class EccubeProvider extends AbstractProvider
            }
         GRAPHQL;
 
-        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+        $client = new Client();
+        $response = $client->post($this->getEccubeUrl() . '/api', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
@@ -562,7 +563,8 @@ class EccubeProvider extends AbstractProvider
             }
         GRAPHQL;
 
-        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+        $client = new Client();
+        $response = $client->post($this->getEccubeUrl() . '/api', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
@@ -611,7 +613,8 @@ class EccubeProvider extends AbstractProvider
             }
         GRAPHQL;
 
-        $response = $this->getHttpClient()->post($this->getEccubeUrl() . '/api', [
+        $client = new Client();
+        $response = $client->post($this->getEccubeUrl() . '/api', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
