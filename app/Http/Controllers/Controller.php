@@ -553,7 +553,8 @@ class Controller extends BaseController
     {
         try {
             $driver = Socialite::driver('ec-cube');
-            $data = Eccube::latest()->firstOrFail();
+            $type = session('type');
+            $data = Eccube::where('type', $type)->firstOrFail();
 
             switch ($data->type) {
                 case 'customer':
@@ -586,6 +587,7 @@ class Controller extends BaseController
                 'webhook' => $request->get('webhook'),
             ],
         );
+        session(['type' => $request->get('type')]);
 
         return redirect()->route('ec-cube');
     }
