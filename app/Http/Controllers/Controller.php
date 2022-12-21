@@ -546,7 +546,7 @@ class Controller extends BaseController
 
     public function eccube()
     {
-        return Socialite::driver('ec-cube')->scopes(['read'])->with(['test' => 'test'])->redirect();
+        return Socialite::driver('ec-cube')->scopes(['read'])->redirect();
     }
 
     public function eccubeRedirect(Request $request)
