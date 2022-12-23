@@ -570,10 +570,10 @@ class Controller extends BaseController
                     break;
             }
 
-            return redirect()->route('cube')->with('message', 'Sync data success');
+            return redirect()->route('cube')->with('message', 'データの同期成功');
         } catch (\Exception $e) {
             logger("ECCUBE : $e");
-            return redirect()->route('cube')->with('error', 'Server error');
+            return redirect()->route('cube')->with('error', 'サーバーエラー');
         }
     }
 
@@ -622,7 +622,7 @@ class Controller extends BaseController
             }
         } catch (\Exception $e) {
             logger("hook : $e");
-            return redirect()->route('cube')->with('error', 'Server error');
+            return redirect()->route('cube')->with('error', 'サーバーエラー');
         }
     }
 }
