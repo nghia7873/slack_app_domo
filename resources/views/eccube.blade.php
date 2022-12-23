@@ -46,22 +46,22 @@
     </style>
 </head>
 <div class="container">
-    <h2>Config webhook EC CUBE</h2>
+    <h2>EC-CUBE Webhook設定</h2>
     <form action="{{ route('handle-cube') }}" method="POST">
         @csrf
         <div class="form-group">
-            <label for="token">Webhook EC CUBE:</label>
+            <label for="token">EC-CUBE Webhook:</label>
             <input type="text" class="form-control" id="webhook" name="webhook" required>
         </div>
         <div class="form-group">
-            <label for="token">Select type EC CUBE:</label>
+            <label for="token">EC-CUBE 取得情報選択:</label>
             <select class="form-select" name="type">
-                <option value="customer">Customer</option>
-                <option value="order">Order</option>
-                <option value="product">Product</option>
+                <option value="customer">顧客情報</option>
+                <option value="order">注文情報</option>
+                <option value="product">商品情報</option>
             </select>
         </div>
-        <button type="submit" class="btn btn-default">Create</button>
+        <button type="submit" class="btn btn-default">作成</button>
     </form>
 </div>
 
