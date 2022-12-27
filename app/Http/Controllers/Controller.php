@@ -16,6 +16,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
@@ -541,7 +542,26 @@ class Controller extends BaseController
 
     public function cube()
     {
-        return view('eccube');
+        $url = url('');
+        $urlFree = [
+            'https://domo-eccube-v1.developmentlab.tokyo',
+            'http://domo-eccube-v1.developmentlab.tokyo',
+        ];
+        $urlPaid = [
+            'https://domo-eccube-v2.developmentlab.tokyo',
+            'http://domo-eccube-v2.developmentlab.tokyo',
+        ];
+
+
+        if (in_array($url, $urlFree)) {
+            $title = 'Free Domo - EC-CUBE Dashboard';
+        } elseif (in_array($url, $urlPaid)) {
+            $title = 'Paid Domo - EC-CUBE Dashboard ';
+        } else {
+            $title = 'Laravel';
+        }
+
+        return view('eccube', compact('title'));
     }
 
     public function eccube()
