@@ -143,7 +143,10 @@ class EccubeProvider extends AbstractProvider
         $refreshToken = Arr::get($response, 'refresh_token');
         $oauth2 = OauthEccube::latest()->first();
         if ($oauth2) {
-            $token = $oauth2->access_token;
+            $oauth2->update([
+                'access_token' => $token,
+                'refresh_token' => $refreshToken
+            ]);
         } else {
             OauthEccube::create([
                 'access_token' => $token,
@@ -186,7 +189,10 @@ class EccubeProvider extends AbstractProvider
         $refreshToken = Arr::get($response, 'refresh_token');
         $oauth2 = OauthEccube::latest()->first();
         if ($oauth2) {
-            $token = $oauth2->access_token;
+            $oauth2->update([
+                'access_token' => $token,
+                'refresh_token' => $refreshToken
+            ]);
         } else {
             OauthEccube::create([
                 'access_token' => $token,
@@ -311,7 +317,10 @@ class EccubeProvider extends AbstractProvider
         $refreshToken = Arr::get($response, 'refresh_token');
         $oauth2 = OauthEccube::latest()->first();
         if ($oauth2) {
-            $token = $oauth2->access_token;
+            $oauth2->update([
+                'access_token' => $token,
+                'refresh_token' => $refreshToken
+            ]);
         } else {
             OauthEccube::create([
                 'access_token' => $token,

@@ -573,7 +573,8 @@ class Controller extends BaseController
     {
         try {
             $driver = Socialite::driver('ec-cube');
-            $data = Eccube::latest()->firstOrFail();
+            $type = session('type');
+            $data = Eccube::where('type', $type)->firstOrFail();
 
             switch ($data->type) {
                 case 'customer':
@@ -589,10 +590,10 @@ class Controller extends BaseController
                     break;
             }
 
-            return redirect()->route('cube')->with('message', 'Sync data success');
+            return redirect()->route('cube')->with('message', 'データの同期成功');
         } catch (\Exception $e) {
             logger("ECCUBE : $e");
-            return redirect()->route('cube')->with('error', 'Server error');
+            return redirect()->route('cube')->with('error', 'サーバーエラー');
         }
     }
 
@@ -606,6 +607,7 @@ class Controller extends BaseController
                 'webhook' => $request->get('webhook'),
             ],
         );
+        session(['type' => $request->get('type')]);
 
         return redirect()->route('ec-cube');
     }
@@ -640,7 +642,7 @@ class Controller extends BaseController
             }
         } catch (\Exception $e) {
             logger("hook : $e");
-            return redirect()->route('cube')->with('error', 'Server error');
+            return redirect()->route('cube')->with('error', 'サーバーエラー');
         }
     }
 }
