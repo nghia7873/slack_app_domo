@@ -31,5 +31,11 @@ class AppServiceProvider extends ServiceProvider
 
             return $socialite->buildProvider(EccubeProvider::class, $config);
         });
+
+        $socialite->extend('base', function () use ($socialite) {
+            $config = config('services.base');
+
+            return $socialite->buildProvider(BaseProvider::class, $config);
+        });
     }
 }

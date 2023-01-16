@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\LinkedinExport;
 use App\Jobs\LinkedinJob;
 use App\Jobs\SendEmail;
+use App\Models\Base;
 use App\Models\Eccube;
 use App\Models\Linkedin;
 use App\Models\Slack;
@@ -643,6 +644,63 @@ class Controller extends BaseController
         } catch (\Exception $e) {
             logger("hook : $e");
             return redirect()->route('cube')->with('error', 'サーバーエラー');
+        }
+    }
+
+    public function base()
+    {
+        return view('base');
+    }
+
+    public function handleBase(Request $request)
+    {
+        Base::updateOrCreate(
+            [
+                'type' => $request->get('type')
+            ],
+            [
+                'webhook' => $request->get('webhook'),
+            ],
+        );
+        session(['type' => $request->get('type')]);
+
+        return redirect()->route('base-oauth2');
+    }
+
+    public function baseOauth2()
+    {
+        $scopes = [
+          'read_users read_items read_orders'
+        ];
+
+        return Socialite::driver('base')->scopes($scopes)->redirect();
+    }
+
+    public function baseRedirect(Request $request)
+    {
+        try {
+            $driver = Socialite::driver('base');
+            $type = session('type');
+            $data = Base::where('type', $type)->firstOrFail();
+
+            switch ($data->type) {
+//                case 'customer':
+//                    $driver->getGraphqlCustomer($data->webhook);
+//                    break;
+                case 'order':
+                    $driver->getGraphqlOrder($data->webhook);
+                    break;
+                case 'product':
+                    $driver->getGraphqlProduct($data->webhook);
+                    break;
+                default:
+                    break;
+            }
+
+            return redirect()->route('base')->with('message', 'データの同期成功');
+        } catch (\Exception $e) {
+            logger("BASE : $e");
+            return redirect()->route('base')->with('error', 'サーバーエラー');
         }
     }
 }

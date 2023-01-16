@@ -39,5 +39,11 @@ return [
         'client_id' => env('EC_CLIENT_ID'),
         'client_secret' => env('EC_CLIENT_SECRET'),
         'redirect' => env('EC_REDIRECT'),
+    ],
+
+    'base' => [
+        'client_id' => env('BASE_CLIENT_ID'),
+        'client_secret' => env('BASE_CLIENT_SECRET'),
+        'redirect' => env('BASE_REDIRECT'),
     ]
 ];

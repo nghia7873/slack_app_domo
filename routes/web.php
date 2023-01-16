@@ -31,3 +31,8 @@ Route::get('/test/ec-cube', [\App\Http\Controllers\Controller::class, 'eccube'])
 Route::get('/test/ec-cube/redirect', [\App\Http\Controllers\Controller::class, 'eccubeRedirect']);
 Route::post('/webhook/ec', [\App\Http\Controllers\Controller::class, 'hook']);
 
+Route::get('/base', [\App\Http\Controllers\Controller::class, 'base'])->name('base');
+Route::post('/base', [\App\Http\Controllers\Controller::class, 'handleBase'])->name('handle-base');
+Route::get('/test/base', [\App\Http\Controllers\Controller::class, 'baseOauth2'])->name('base-oauth2');
+Route::get('/test/base/redirect', [\App\Http\Controllers\Controller::class, 'baseRedirect']);
+
